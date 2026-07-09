@@ -1,0 +1,9 @@
+{"type":"tool_start","call_id":"c1","tool":"read","args":{"path":"DESIGN.md"},"executor_id":"gina","backend":"fixture"}
+{"type":"tool_end","call_id":"c1","result":{"summary":"read 797 lines"},"is_error":false,"executor_id":"gina","backend":"fixture"}
+{"type":"tool_start","call_id":"c2","tool":"shell","args":{"cmd":"git status"},"executor_id":"gina","backend":"fixture"}
+{"type":"waiting_permission","request_id":"p1","reason":"shell: git status","executor_id":"gina","backend":"fixture"}
+{"type":"tool_end","call_id":"c2","result":{"summary":"clean working tree"},"is_error":false,"executor_id":"gina","backend":"fixture"}
+{"type":"tool_start","call_id":"c3","tool":"write","args":{"path":"notes.md"},"executor_id":"gina","backend":"fixture"}
+{"type":"tool_end","call_id":"c3","result":{"summary":"permission denied"},"is_error":true,"executor_id":"gina","backend":"fixture"}
+{"type":"error","message":"retrying write with elevated path","recoverable":true,"executor_id":"gina","backend":"fixture"}
+{"type":"turn_or_quest_end","quest_id":"q-fixture-1","summary":"fixture quest complete","executor_id":"gina","backend":"fixture"}

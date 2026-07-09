@@ -1,0 +1,9 @@
+{"file": "DESIGN.md", "reason": "Project north-star vision; read-only reference for milestones, KernelEvent shape, §8 budget rules — do not edit"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/design.md", "reason": "Decided Path B slice: relationship evolution, mid-early probe, dual-channel A1, falsification order"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/notes-executor-role-model.md", "reason": "Open executor ontology constraints: identity ≠ backend, no dual growth ledgers"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/tsukumo-differentiation-implications.md", "reason": "Market empty layers and F0–F5 falsification guidance"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/runtime-interop-acp.md", "reason": "A1 channel heuristic: ACP bridge vs stream-json on Windows"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/competitor-matrix.md", "reason": "Collision map vs Pixel/Cockpit/Hermes; avoid spectacle-only trap"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer consistency when wiring kernel → theater → soul"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend package guidelines index before Rust implementation"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend/TUI guidelines index for theater surface"}

@@ -1,0 +1,9 @@
+{"file": "DESIGN.md", "reason": "North-star invariants to verify against: anti-Clippy, makeup-at-exit, event bus boundaries — read-only"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/design.md", "reason": "Check A1 pass criteria, probe scope, §6 extension points not violated"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/implement.md", "reason": "Validation matrix V-unit through V-northstar"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/tsukumo-differentiation-implications.md", "reason": "Ensure F1/F3 gates not replaced by spectacle-only demos"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/runtime-interop-acp.md", "reason": "Verify client capabilities not over-advertised (no fake fs/terminal)"}
+{"file": ".trellis/tasks/07-09-impl-path-harness-landscape/notes-executor-role-model.md", "reason": "Reject PRs that introduce dual species growth schemas"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer review checklist"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend quality bar for kernel/adapters"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "TUI/theater quality bar"}

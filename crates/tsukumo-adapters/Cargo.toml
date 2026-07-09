@@ -1,0 +1,17 @@
+[package]
+name = "tsukumo-adapters"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Tsukumo drive adapters: stream-json / synthetic → KernelEvent (A1)"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tsukumo-kernel = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tsukumo-theater = { workspace = true }

@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/tsukumo-kernel",
+    "crates/tsukumo-theater",
+    "crates/tsukumo-adapters",
+    "crates/tsukumo-soul",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.75"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+ratatui = "0.30"
+tsukumo-kernel = { path = "crates/tsukumo-kernel" }
+tsukumo-theater = { path = "crates/tsukumo-theater" }
+tsukumo-soul = { path = "crates/tsukumo-soul" }
+tsukumo-adapters = { path = "crates/tsukumo-adapters" }

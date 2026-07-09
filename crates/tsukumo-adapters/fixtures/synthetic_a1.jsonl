@@ -1,0 +1,7 @@
+{"type":"system","subtype":"init","session_id":"synth-a1","tools":["Bash","Read"],"permissionMode":"default"}
+{"type":"assistant","session_id":"synth-a1","message":{"id":"m1","type":"message","role":"assistant","content":[{"type":"text","text":"Checking the workshop."},{"type":"tool_use","id":"toolu_read","name":"Read","input":{"path":"DESIGN.md"}}]}}
+{"type":"user","session_id":"synth-a1","message":{"id":"m2","type":"message","role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_read","content":"north-star design, 797 lines"}]}}
+{"type":"assistant","session_id":"synth-a1","message":{"id":"m3","type":"message","role":"assistant","content":[{"type":"tool_use","id":"toolu_bash","name":"Bash","input":{"command":"git status"}}]}}
+{"type":"sdk_control_request","request":{"subtype":"permission","request_id":"perm_synth_1","tool_name":"Bash","tool_input":{"command":"git status"}}}
+{"type":"user","session_id":"synth-a1","message":{"id":"m4","type":"message","role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_bash","content":"clean working tree"}]}}
+{"type":"result","subtype":"success","is_error":false,"session_id":"synth-a1","result":"synthetic A1 quest complete","num_turns":2}

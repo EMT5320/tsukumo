@@ -1,0 +1,22 @@
+[package]
+name = "tsukumo-soul"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Tsukumo relationship probe: soul store, brief compiler, prompt inject hook, skills socket"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled"] }
+tsukumo-kernel = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = { workspace = true }
+
+[[example]]
+name = "recall_demo"
+path = "examples/recall_demo.rs"

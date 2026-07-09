@@ -1,0 +1,17 @@
+[package]
+name = "tsukumo-theater"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Tsukumo L4 theater: StageEvent, pure Director, HalfBlock workshop stage"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ratatui = { workspace = true }
+unicode-width = "0.2"
+tsukumo-kernel = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
