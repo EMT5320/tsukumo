@@ -51,4 +51,4 @@ template split no longer represents actual ownership or language conventions.
 - [x] Index files match the final spec tree.
 - [x] No template placeholder text remains in `.trellis/spec/`.
 - [x] Spec links and Trellis package discovery are verified.
-- [ ] Changes are committed and this bootstrap task is archived.
+- [x] Changes are committed; the task is ready for workflow archival.
