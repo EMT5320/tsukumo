@@ -10,6 +10,7 @@ backend/frontend templates created by `trellis init`.
 |---|---|
 | Any cross-crate or dependency change | [Architecture and Boundaries](./architecture-and-boundaries.md) |
 | Kernel event, adapter payload, fixture, or identity change | [Types and Event Contracts](./types-and-event-contracts.md) |
+| Runtime process, Claude/Codex adapter, live smoke, or runtime fixture change | [Runtime Adapters](./runtime-adapters.md) |
 | Soul, Chronicle, state, checkpoint, receipt, or database change | [State and Persistence](./state-and-persistence.md) |
 | Director, StageWorld, rendering, animation, or attention change | [Theater](./theater.md) |
 | Fallible I/O, parsing, process, or storage change | [Error Handling](./error-handling.md) |
@@ -33,4 +34,3 @@ Primary design sources:
 - `docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md`
 - `crates/tsukumo-kernel/src/event.rs`
 - `crates/tsukumo-theater/src/director.rs`
-

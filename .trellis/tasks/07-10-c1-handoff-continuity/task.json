@@ -1,0 +1,31 @@
+{
+  "id": "c1-handoff-continuity",
+  "name": "c1-handoff-continuity",
+  "title": "C1 Handoff Continuity",
+  "description": "验证真实经历形成状态并跨 runtime 通过 checkpoint 继续影响行动的首条纵向闭环",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P0",
+  "creator": "EMT5320",
+  "assignee": "EMT5320",
+  "createdAt": "2026-07-10",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "07-10-c1-contracts-chronicle",
+    "07-10-c1-handoff-projection",
+    "07-10-c1-host-runtime",
+    "07-10-c1-cross-runtime-ui"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
