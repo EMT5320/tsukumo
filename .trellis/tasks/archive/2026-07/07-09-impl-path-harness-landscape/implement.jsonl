@@ -5,5 +5,5 @@
 {"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/runtime-interop-acp.md", "reason": "A1 channel heuristic: ACP bridge vs stream-json on Windows"}
 {"file": ".trellis/tasks/07-09-impl-path-harness-landscape/research/competitor-matrix.md", "reason": "Collision map vs Pixel/Cockpit/Hermes; avoid spectacle-only trap"}
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer consistency when wiring kernel → theater → soul"}
-{"file": ".trellis/spec/backend/index.md", "reason": "Backend package guidelines index before Rust implementation"}
-{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend/TUI guidelines index for theater surface"}
+{"file": ".trellis/spec/rust/architecture-and-boundaries.md", "reason": "Rust crate ownership and dependency boundaries for kernel, adapters, soul, and theater"}
+{"file": ".trellis/spec/rust/theater.md", "reason": "TUI/theater direction, state, rendering, and replay conventions"}

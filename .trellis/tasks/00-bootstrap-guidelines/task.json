@@ -21,9 +21,9 @@
   "children": [],
   "parent": null,
   "relatedFiles": [
-    ".trellis/spec/backend/",
-    ".trellis/spec/frontend/"
+    ".trellis/spec/rust/",
+    ".trellis/spec/guides/"
   ],
-  "notes": "First-time setup task created by trellis init (fullstack project)",
+  "notes": "Reshaped from generic full-stack templates to source-backed Rust workspace guidance.",
   "meta": {}
 }
