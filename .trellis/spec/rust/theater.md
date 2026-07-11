@@ -62,3 +62,11 @@ References:
 - `crates/tsukumo-theater/src/render.rs`
 - `crates/tsukumo-theater/tests/fixture_replay.rs`
 
+
+## C1 durable text boundary
+
+Director consumes validated `KernelEvent` values only. Bubble and log text use
+the shared deterministic redaction policy and bounded output; raw user input,
+vendor JSON, credentials, and presentation persona never cross into durable
+runtime/state projections. Outcome matches remain exhaustive, including
+permission-denied, safety-unsupported, and degraded terminal states.

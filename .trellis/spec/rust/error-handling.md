@@ -12,8 +12,9 @@ Current reference patterns:
   numbers and the original serde error.
 - `AdapterError` in `crates/tsukumo-adapters/src/stream_json.rs` distinguishes
   I/O from line-scoped JSON failures.
-- `SoulError` in `crates/tsukumo-soul/src/store.rs` wraps filesystem and SQLite
-  errors and names domain validation failures.
+- `SoulError` in `crates/tsukumo-soul/src/storage.rs` wraps filesystem and
+  SQLite errors and names domain validation, migration, budget, and legacy
+  sensitive-content failures.
 
 ## Propagation Rules
 
@@ -44,3 +45,23 @@ Current reference patterns:
 - Permission denial is a normal controlled outcome, not a relationship-state
   error and not an automatic retry authorization.
 
+
+## C1 typed failure distinctions
+
+- `DecodeError` separates invalid JSON, missing known fields, invalid known
+  fields, unsupported known values, and oversized lines; `AdapterError` adds
+  the exact source line.
+- `EventContractError` separates unsupported schema, missing attribution,
+  invalid durable fields, and sensitive content. JSONL load, Chronicle append,
+  and Chronicle replay all apply the same event gate.
+- `ExtractError` is provider-neutral. `extract_non_blocking` converts malformed,
+  timeout, and unavailable extraction into a recoverable observable error
+  payload while returning no partial state.
+- `StateValidationError` identifies missing/permission/future evidence,
+  repeated-strength failure, evidence-chain mismatch, metadata/scope failure,
+  conflict, backdated transition, inactive state, expiry, and lifecycle
+  mismatch. Migration fails with `InvalidStoredValue` when an inactive
+  schema-one interval cannot be reconstructed.
+- `OutcomeStatus` reserves distinct wire values for `PermissionDenied`,
+  `SafetyUnsupported`, and `Degraded`. Do not encode these as cancellation,
+  generic failure, or summary text.

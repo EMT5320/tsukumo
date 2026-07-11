@@ -26,10 +26,17 @@ linker, or target setup prevented execution; record the environmental blocker
 separately from code failures.
 
 The repository currently lacks CI, a pinned `rust-toolchain.toml`, and a
-tracked `Cargo.lock`. The previous task reported Windows GNU success, while the
-current environment exposes only MSVC and cannot fetch crates through Schannel.
-C1 must establish a reproducible verification path before claiming its full
-quality gate.
+tracked `Cargo.lock`. This Windows workspace has both MSVC and GNU stable
+installed; C1 verification uses the cached GNU toolchain explicitly and stays
+offline:
+
+```text
+cargo +stable-x86_64-pc-windows-gnu <command> --offline
+```
+
+Do not infer remote reproducibility from this local gate. Tracking `Cargo.lock`,
+pinning the tested toolchain/target, and Linux + Windows GNU CI remain assigned
+to the cross-runtime/UI child.
 
 ## Test Layers
 
@@ -70,3 +77,11 @@ integration coverage.
 - No presentation copy enters runtime prompts.
 - Formatting, check, clippy, and tests have honest recorded outcomes.
 
+
+## Review-work regression lanes
+
+A final C1 check includes semantic-negative tests, durable attribution/value
+validation, bounded-reader consumption, SQLite replay validation, historical
+state selection, derived FTS freshness, legacy conflict visibility, metadata
+sentinels, and the adapter-to-Chronicle-to-Theater chain. Passing only the
+positive GNU demo is insufficient.

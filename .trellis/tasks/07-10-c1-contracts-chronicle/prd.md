@@ -34,16 +34,16 @@
 
 ## Acceptance Criteria
 
-- [ ] 已知事件可序列化、持久化、重开并以相同顺序重放。
-- [ ] tool/permission/projection 相关事件具有可追踪 execution/correlation。
-- [ ] theater 和 soul 不读取 vendor 原始 payload。
-- [ ] 显式 GNU toolchain 用户事件可形成带 scope/evidence 的 Constraint。
-- [ ] 单次 inferred draft 无法形成硬 Constraint。
-- [ ] malformed/timeout LLM 提取不会阻塞主任务，也不会写入半成品状态。
-- [ ] 同 key/scope 冲突不静默覆盖，revoke/supersede 保留历史。
-- [ ] Chronicle/evidence 写入失败可见，测试不允许静默丢失。
-- [ ] 删除导出文件后可从 SQLite 重建，且修改导出文件不会改变 canonical state。
-- [ ] 旧 `facts` migration 重跑幂等，且导入状态不会获得伪造的 explicit strength。
+- [x] 已知事件可序列化、持久化、重开并以相同顺序重放。
+- [x] tool/permission/projection 相关事件具有可追踪 execution/correlation。
+- [x] theater 和 soul 不读取 vendor 原始 payload。
+- [x] 显式 GNU toolchain 用户事件可形成带 scope/evidence 的 Constraint。
+- [x] 单次 inferred draft 无法形成硬 Constraint。
+- [x] malformed/timeout LLM 提取不会阻塞主任务，也不会写入半成品状态。
+- [x] 同 key/scope 冲突不静默覆盖，revoke/supersede 保留历史。
+- [x] Chronicle/evidence 写入失败可见，测试不允许静默丢失。
+- [x] 删除导出文件后可从 SQLite 重建，且修改导出文件不会改变 canonical state。
+- [x] 旧 `facts` migration 重跑幂等，且导入状态不会获得伪造的 explicit strength。
 
 ## Out of Scope
 

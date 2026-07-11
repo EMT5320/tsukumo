@@ -169,3 +169,18 @@ checkpoint/receipt -> prompt on child stdin -> host-owned Claude or Codex proces
 
 Fixtures make the contract reproducible; the opt-in live smoke makes the
 product claim honest without placing secrets or model nondeterminism in CI.
+
+## Implemented C1 stream boundary
+
+- `parse_stream_json_reader` uses a bounded `fill_buf` loop. It stops near the
+  1 MiB line limit before allocating the rest of an unterminated runtime line.
+- Known tool/result/permission shapes use typed required/optional decoders.
+  Missing/wrong-type required fields and unsupported known result subtypes are
+  errors; unknown top-level compatibility noise remains an explicit skip.
+- Vendor labels, text, JSON keys/values, and diagnostic subtype values are
+  bounded and redacted before they leave the adapter.
+- Adapter payloads deliberately carry no durable envelope IDs. A host seam must
+  add execution/runtime/correlation and tool/outcome projection before calling
+  `validate_kernel_event` or Chronicle append.
+- The conformance path must prove adapter -> enriched envelope -> Chronicle
+  reopen/replay -> Theater, in addition to pure adapter -> Theater behavior.

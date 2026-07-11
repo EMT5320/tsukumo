@@ -2,8 +2,8 @@
   "id": "c1-contracts-chronicle",
   "name": "c1-contracts-chronicle",
   "title": "C1 Contracts and Chronicle",
-  "description": "实现身份、事件 envelope、Chronicle、StateRecord 与确定性 StateWriter",
-  "status": "planning",
+  "description": "Implement identity and event envelopes, Chronicle, StateRecord, and deterministic StateWriter",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": "07-10-c1-handoff-continuity",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "2026-07-11: five-lane review passed; offline gates 94/94; work commits approved; archive pending.",
   "meta": {}
 }

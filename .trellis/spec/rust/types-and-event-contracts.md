@@ -1,80 +1,114 @@
 # Types and Event Contracts
 
-## Identity Types
+## Scenario: C1 Durable Event Envelope
 
-Use opaque newtypes for durable identifiers instead of passing unrelated
-strings through APIs. `ExecutorId` in
-`crates/tsukumo-kernel/src/identity.rs` is the current reference shape:
+### 1. Scope / Trigger
 
-- tuple newtype;
-- `#[serde(transparent)]`;
-- `Display`, `From<&str>`, and `From<String>` where useful;
-- equality/hash/serde derives.
+Apply this contract whenever adapter output becomes a durable event, a fixture is
+replayed, or Chronicle reads/writes an envelope. Adapters emit normalized
+`KernelEventPayload`; a host or deterministic fixture seam supplies envelope
+identity and projection attribution before persistence.
 
-For C1, use the design vocabulary `SpiritId`, `ExecutionId`, `SessionId`,
-`QuestId`, `EventId`, and state/checkpoint/projection IDs. A spirit ID is
-persistent; a `RuntimeBinding` identifies the current backend/transport.
-Vendor is compatibility metadata, never state ownership.
+### 2. Signatures
 
-## Serialized Enums
-
-The local wire convention is:
+Durable identities are transparent string newtypes: `EventId`, `QuestId`,
+`SessionId`, `OwnerId`, `WorkspaceId`, `SpiritId`, `ExecutionId`, `StateId`,
+`CheckpointId`, `ProjectionId`, `CorrelationId`, and `ArtifactId`.
 
 ```rust
-#[serde(tag = "type", rename_all = "snake_case")]
-enum EventPayload { /* ... */ }
+pub struct RuntimeBinding {
+    pub kind: RuntimeKind,
+    pub mode: RuntimeMode,
+}
+
+pub struct KernelEvent {
+    pub schema_version: u16,
+    pub event_id: EventId,
+    pub occurred_at: Timestamp,
+    pub quest_id: QuestId,
+    pub session_id: SessionId,
+    pub spirit_id: SpiritId,
+    pub execution_id: Option<ExecutionId>,
+    pub runtime: Option<RuntimeBinding>,
+    pub causation_id: Option<EventId>,
+    pub correlation_id: Option<CorrelationId>,
+    pub payload: KernelEventPayload,
+}
 ```
 
-Use `rename_all = "snake_case"` for fieldless enums such as `BackendKind` and
-`ActorPose`. Optional legacy/probe fields use `default` plus
-`skip_serializing_if = "Option::is_none"`; identity and correlation fields in
-new live C1 envelopes should be required once the host has assigned them.
+The serialized field is exactly `runtime`. `ExecutorId`, `BackendKind`, and
+`runtime_binding` are obsolete probe vocabulary.
 
-References:
+### 3. Contracts
 
-- `crates/tsukumo-kernel/src/event.rs`
-- `crates/tsukumo-theater/src/stage.rs`
-- `crates/tsukumo-soul/src/trace.rs`
+- `schema_version == KERNEL_EVENT_SCHEMA_VERSION` on JSONL load, Chronicle
+  append, and Chronicle replay.
+- Event/quest/session/spirit IDs are always non-empty bounded labels.
+- Runtime lifecycle events require execution plus runtime binding.
+- Tool start/end require execution, runtime, correlation, and a non-empty
+  projection ID.
+- Permission request/decision and projection creation require execution,
+  runtime, and correlation.
+- Projected outcomes require execution, runtime, correlation, and a non-empty
+  projection ID. Pre-projection launch outcomes may omit projection context.
+- State lifecycle events require causation and StateWriter binds that cause to
+  transition evidence.
+- Vendor IDs remain `VendorEventRef { namespace, id }`; they never become global
+  event IDs without host namespacing.
+- `SensitiveText` has redacted `Debug`/`Display` and no serde. `PersistedText`
+  and `PersistedJson` are serializable reviewed values with redacted `Debug`.
+- Durable text is bounded to 65,536 characters; JSON is sanitized to depth 32,
+  64 items per collection, 512 characters per untrusted string, and 65,536
+  serialized bytes.
+- Outcome wire values distinguish `permission_denied`, `safety_unsupported`,
+  and `degraded` from cancelled, failed, timeout, malformed output, non-zero
+  exit, and launch failure.
 
-## Normalize Once at the Boundary
+### 4. Validation & Error Matrix
 
-`crates/tsukumo-adapters/src/stream_json.rs` owns the Claude-like NDJSON subset.
-Follow that ownership model for every runtime:
+| Condition | Required result |
+|---|---|
+| Newer/unknown schema | `EventContractError::UnsupportedSchema` |
+| Missing execution/runtime/correlation/projection | `MissingAttribution` |
+| Empty, control-bearing, oversized, or sensitive durable ID/label | `InvalidField` or `SensitiveContent` |
+| Unredacted credential in text/JSON/metadata | `SensitiveContent`; write nothing |
+| Oversized adapter or event JSONL line | typed line error with source line; stop reading near 1 MiB |
+| Malformed known vendor event | typed adapter error; never fabricate success/default IDs |
+| Unknown optional vendor event | documented forward-compatible skip |
+| SQLite replay contains invalid stored JSON | surface JSON/event-contract error |
 
-1. Decode raw input at the adapter boundary.
-2. Validate the known event shape.
-3. Produce a vendor-neutral payload.
-4. Let the host/event writer assign the durable envelope and Chronicle order.
-5. Make theater, state reducers, filters, and replay consume the shared typed
-   event rather than reparsing raw JSON.
+### 5. Good / Base / Bad Cases
 
-Unknown vendor event kinds may be skipped only when the adapter explicitly
-documents them as forward-compatible noise. A malformed known event must
-surface an error with source location; do not silently fabricate durable IDs
-such as `unknown` or `perm` for Chronicle records.
+- **Good**: adapter tool payload -> host adds execution/runtime/correlation and
+  projection -> Chronicle validates/appends -> replay returns the same envelope.
+- **Base**: system initialization vendor noise maps to no product event.
+- **Bad**: drive Theater with an unattributed tool payload and later assume the
+  same object can be persisted.
 
-## C1 Event Envelope
+### 6. Tests Required
 
-New C1 work follows the frozen envelope fields from the convergence design:
+- Transparent newtype and enum wire round trips.
+- Envelope round trip with runtime/correlation/projection.
+- Empty semantic ID and missing attribution rejection.
+- Bounded JSONL reader that proves it stops before consuming an oversized line.
+- Adapter malformed-known-event and redaction sentinels.
+- Adapter -> enriched envelope -> Chronicle reopen/replay -> Theater integration.
+- SQLite replay revalidation after simulated stored-schema corruption.
+
+### 7. Wrong vs Correct
+
+#### Wrong
 
 ```text
-schema_version, event_id, occurred_at,
-quest_id, session_id, spirit_id, execution_id,
-runtime_binding, causation_id, correlation_id, payload
+vendor JSON -> Theater
+           -> separately invented Chronicle event with guessed IDs
 ```
 
-- Assign `event_id`, time, and Chronicle sequence in one event-writer path.
-- Preserve source/vendor IDs as payload provenance; do not reuse them as global
-  IDs without namespacing.
-- Tool start/end and permission request/decision events share correlation IDs.
-- Projection/tool/outcome events carry the execution and projection references
-  needed to reconstruct the evidence chain.
+#### Correct
 
-## Replay Compatibility
-
-- Live and fixture paths must deserialize the same persisted contract.
-- Add `schema_version` before the second incompatible event shape lands.
-- Update central types, adapter normalization, fixture JSONL, reducers,
-  director mapping, and replay tests together.
-- A schema change requires round-trip tests and at least one fixture replay.
-
+```text
+vendor JSON -> adapter payload
+            -> host envelope assignment + validate_kernel_event
+            -> Chronicle append/replay
+            -> Theater and Soul consume the same typed event
+```

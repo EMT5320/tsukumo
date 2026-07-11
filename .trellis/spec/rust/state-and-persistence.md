@@ -463,3 +463,129 @@ approve it.
   when replacing it.
 - Use transactions when a logical write changes multiple durable structures.
 - Do not claim a write succeeded if its evidence/receipt append failed.
+
+## Scenario: C1 StateWriter Trust, Time, and Derived Search
+
+### 1. Scope / Trigger
+
+Apply this contract to every extractor proposal, create/supersede/revoke
+transition, historical selection, legacy import, and state search.
+
+### 2. Signatures
+
+```rust
+pub struct StateScope {
+    pub subject: StateSubject,
+    pub applicability: StateApplicability,
+}
+
+pub struct StateApplicability {
+    pub workspace: Option<WorkspaceId>,
+    pub operating_system: Option<OperatingSystem>,
+    pub task_tags: Vec<String>,
+    pub language_tags: Vec<String>,
+    pub required_capabilities: Vec<String>,
+}
+
+pub struct StateRecord {
+    // identity, key, kind, scope, content, strength, status, evidence, provenance
+    pub created_at: Timestamp,
+    pub expires_at: Option<Timestamp>,
+    pub deactivated_at: Option<Timestamp>,
+    pub supersedes_state_id: Option<StateId>,
+}
+```
+
+Applicability is capability-oriented. It never contains Claude/Codex runtime
+selection. Runtime compatibility belongs to capabilities and the later
+projection selector.
+
+### 3. Contracts
+
+- Recorded/structured DTOs contain semantic proposals only: key, kind, content,
+  and optional expiry. Trusted extraction context supplies scope, current event
+  evidence, inferred strength, and provenance.
+- StateWriter validates key/scope alignment, bounded metadata, secret policy,
+  evidence existence, non-permission evidence, spirit identity, evidence time,
+  lifecycle causation, TTL, conflicts, and strength combinations.
+- `Repeated` requires at least two distinct Chronicle event IDs. `Explicit`
+  currently accepts only the versioned GNU rule plus an allowlist of normalized
+  imperative/project-assertion sentences containing exact `gnu` and `windows`
+  tokens. Negation, opposition, questions, hedges, one-off language, and
+  substring lookalikes are rejected.
+- `created_at <= as_of`, `expires_at > as_of`, and
+  `deactivated_at > as_of` define historical selection. Supersede/revoke update
+  status plus `deactivated_at`; content/evidence versions remain immutable.
+  Revocation evidence stays on the lifecycle event causation chain. StateWriter
+  rejects a create older than an existing version for the same key and scope.
+- State lifecycle causation references one transition evidence event. A newly
+  attached source must match lifecycle quest/session/spirit and causation.
+- FTS is derived. `search_states(&mut self, ...)` rebuilds active-state FTS from
+  canonical rows before applying rank/limit, preventing stale rows from hiding
+  current results.
+- Schema migration 2 adds `deactivated_at`, reconstructs superseded/revoked
+  intervals from lifecycle Chronicle events (with successor creation as the
+  supersede fallback), and rejects an inactive row whose interval is unprovable.
+- Version-one legacy completion markers migrate as untrusted version `0`.
+  Completion is recorded only when every row is imported/unchanged. Conflicting
+  changed facts remain visible through the isolated fallback.
+- Legacy write, snapshot, recall, and briefing boundaries enforce field budgets
+  and the shared secret policy. A sensitive pre-C1 row remains available for
+  explicit review while runtime-facing projections omit its content.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+|---|---|
+| Negative/opposed/question/hedged GNU text or `Gnumeric` lookalike | no rule draft |
+| Repeated strength with duplicate/one evidence ID | `RepeatedEvidenceRequired` |
+| Evidence after transition or from another spirit | typed validation error; rollback |
+| Lifecycle cause absent/unrelated | `EvidenceChainMismatch`/invalid lifecycle; rollback |
+| Key names another workspace or metadata contains secrets/controls | `InvalidMetadata` |
+| Query before creation / after expiry / at-or-after deactivation | state excluded |
+| Create predates an existing version for the same key/scope | `BackdatedTransition`; rollback |
+| Search immediately after write or after revoke | rebuilt FTS returns only active rows |
+| Recorded DTO supplies scope/strength/evidence or exceeds 1 MiB | `ExtractError::Malformed` |
+| Legacy rows exceed row/field/aggregate budgets | `LegacyBudgetExceeded` |
+| Legacy text matches secret policy | reject new write; omit old row from snapshot/brief |
+| Changed imported legacy row conflicts | skip is observable; completion stays open |
+
+### 5. Good / Base / Bad Cases
+
+- **Good**: current user event + trusted workspace scope -> draft -> transactional
+  source/state/evidence/lifecycle write -> historical selection and fresh search.
+- **Base**: irrelevant input yields no draft and no durable write.
+- **Bad**: deserialize model-controlled scope/strength/evidence directly into a
+  writable `StateDraft` or rely on stale FTS rows after state mutation.
+
+### 6. Tests Required
+
+- Explicit GNU positives plus negation/opposition/question/one-off/lookalike negatives.
+- Repeated distinct-evidence, future evidence, source identity, and causation.
+- Pre-creation, expiry, supersede, revoke, backdated-create rejection,
+  immutable evidence refs, and historical `as_of` selection.
+- Metadata/key/scope sentinel rejection with atomic rollback.
+- Recorded DTO trust-field/unknown-field/input-budget rejection.
+- Immediate search, stale-limit, export rebuild, and canonical reopen.
+- Schema-1 database migration to schema 2, including inactive intervals and
+  invalidation of pre-versioned legacy completion markers.
+- Changed legacy fact conflict preserving fallback visibility.
+- Sensitive pre-C1 row import skip with snapshot/brief projection exclusion.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```text
+model JSON(scope + strength + evidence) -> StateWriter -> stale FTS
+```
+
+#### Correct
+
+```text
+model semantic proposal + trusted ExtractionContext
+  -> bounded StateDraft
+  -> causal/temporal StateWriter gate
+  -> SQLite canonical state
+  -> rebuildable FTS/export
+```

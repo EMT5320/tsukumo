@@ -2,79 +2,81 @@
 
 ## Preconditions
 
-- [ ] Read parent PRD/design and Rust architecture, event, persistence, error,
+- [x] Read parent PRD/design and Rust architecture, event, persistence, error,
       and quality specs via `trellis-before-dev`.
-- [ ] Confirm this child is the active `in_progress` task; preserve unrelated
+- [x] Confirm this child is the active `in_progress` task; preserve unrelated
       untracked tool directories.
-- [ ] Capture current fixture/test baseline and current environmental blockers.
+- [x] Capture current fixture/test baseline and current environmental blockers.
 
 ## Ordered Checklist
 
 ### 1. Normalize the Baseline
 
-- [ ] Run rustfmt and isolate existing formatting drift from semantic changes.
-- [ ] Record existing workspace test/check results honestly; do not call a
+- [x] Run rustfmt and isolate existing formatting drift from semantic changes.
+- [x] Record existing workspace test/check results honestly; do not call a
       network/toolchain setup failure a code failure or pass.
 
 ### 2. Add Shared Kernel Types
 
-- [ ] Add ID newtypes, timestamp/content-safe shared values, `RuntimeBinding`,
+- [x] Add ID newtypes, timestamp/content-safe shared values, `RuntimeBinding`,
       correlation and projection references.
-- [ ] Add redacted `SensitiveText` with explicit exposure and no implicit serde;
+- [x] Add redacted `SensitiveText` with explicit exposure and no implicit serde;
       validated persisted types perform deliberate conversion.
-- [ ] Split `KernelEventPayload` from the versioned `KernelEvent` envelope.
-- [ ] Add/normalize lifecycle, permission, state, checkpoint, projection and
+- [x] Split `KernelEventPayload` from the versioned `KernelEvent` envelope.
+- [x] Add/normalize lifecycle, permission, state, checkpoint, projection and
       outcome payloads required by parent R1/R2.
-- [ ] Add serde round-trip and redaction tests.
+- [x] Add serde round-trip and redaction tests.
 
 ### 3. Migrate All Existing Consumers Atomically
 
-- [ ] Update session JSONL helpers to read/write envelopes with line context.
-- [ ] Update Claude-like and synthetic adapters to return payloads; keep durable
+- [x] Update session JSONL helpers to read/write envelopes with line context.
+- [x] Update Claude-like and synthetic adapters to return payloads; keep durable
       envelope assignment out of adapters.
-- [ ] Update Director, drive helpers, examples and integration tests.
-- [ ] Rewrite committed fixtures with deterministic envelope IDs/timestamps and
+- [x] Update Director, drive helpers, examples and integration tests.
+- [x] Rewrite committed fixtures with deterministic envelope IDs/timestamps and
       correlation; add replay compatibility tests.
 
 ### 4. Introduce Versioned SQLite Storage
 
-- [ ] Add connection/migration module, foreign-key setup and ordered
+- [x] Add connection/migration module, foreign-key setup and ordered
       `schema_migrations`.
-- [ ] Create Chronicle/state/evidence tables; leave checkpoint/receipt tables to
+- [x] Create Chronicle/state/evidence tables; leave checkpoint/receipt tables to
       child 2's next ordered migration.
-- [ ] Implement append/replay/query and duplicate identical/conflicting event
+- [x] Implement append/replay/query and duplicate identical/conflicting event
       behavior.
-- [ ] Add transaction/unit-of-work API for event + state lifecycle writes.
-- [ ] Make every evidence write error observable; remove `let _ =` behavior
+- [x] Add transaction/unit-of-work API for event + state lifecycle writes.
+- [x] Make every evidence write error observable; remove `let _ =` behavior
       from durable trace paths.
 
 ### 5. Implement State Formation
 
-- [ ] Add `StateKey`, kind, subject/applicability scope, strength, status, TTL,
+- [x] Add `StateKey`, kind, subject/applicability scope, strength, status, TTL,
       evidence and provenance types.
-- [ ] Add rule extractor plus provider-neutral structured-LLM/recorded extractor
+- [x] Add rule extractor plus provider-neutral structured-LLM/recorded extractor
       seam returning `StateDraft` only.
-- [ ] Add deterministic StateWriter create/conflict/supersede/revoke validation.
-- [ ] Exclude permission decisions from auto-state extraction.
-- [ ] Cover explicit GNU constraint, inferred hard-constraint rejection,
+- [x] Add deterministic StateWriter create/conflict/supersede/revoke validation.
+- [x] Exclude permission decisions from auto-state extraction.
+- [x] Cover explicit GNU constraint, inferred hard-constraint rejection,
       malformed/timeout extraction and secret/scope failures.
 
 ### 6. Migrate Probe Data and Derived Views
 
-- [ ] Add idempotent legacy `facts` importer with `legacy_imported` events and
+- [x] Add idempotent legacy `facts` importer with `legacy_imported` events and
       low-strength state only.
-- [ ] Refactor recall/brief compatibility facade to query canonical C1 state or
+- [x] Refactor recall/brief compatibility facade to query canonical C1 state or
       clearly isolate legacy reads during transition.
-- [ ] Rebuild FTS, JSONL and Markdown from SQLite; never import manual edits
+- [x] Rebuild FTS, JSONL and Markdown from SQLite; never import manual edits
       implicitly.
-- [ ] Test export failure after commit as a recoverable stale projection.
+- [x] Test export failure after commit as a recoverable stale projection.
 
 ### 7. Cross-Layer Check and Handoff
 
-- [ ] Trace the positive GNU event/state chain after close/reopen.
-- [ ] Run full child and workspace tests, clippy, format and diff checks.
-- [ ] Run `trellis-check`, update specs for discoveries, commit and archive child.
-- [ ] Record any schema/wire details needed by the handoff/projection child.
+- [x] Trace the positive GNU event/state chain after close/reopen.
+- [x] Run full child and workspace tests, clippy, format and diff checks.
+- [x] Run `trellis-check` and update specs for discoveries.
+- [x] Commit after explicit confirmation.
+- [ ] Archive during `finish-work`.
+- [x] Record any schema/wire details needed by the handoff/projection child.
 
 ## Validation Commands
 
