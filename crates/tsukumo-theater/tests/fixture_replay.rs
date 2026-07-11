@@ -50,7 +50,9 @@ fn fixture_replays_without_panic() {
         "quest end should celebrate"
     );
     assert!(
-        stage.iter().any(|e| matches!(e, StageEvent::LogLine { .. })),
+        stage
+            .iter()
+            .any(|e| matches!(e, StageEvent::LogLine { .. })),
         "every mapped event should leave a log line"
     );
 
@@ -63,12 +65,12 @@ fn fixture_replays_without_panic() {
 }
 
 #[test]
-fn fixture_preserves_executor_id_on_poses() {
+fn fixture_preserves_spirit_id_on_poses() {
     let events = read_jsonl_events(fixture_path()).unwrap();
     let ctx = DirectorContext::default();
     let first = direct(&events[0], &ctx);
     let pose = first.iter().find_map(|e| match e {
-        StageEvent::ActorPose { executor_id, .. } => executor_id.as_ref(),
+        StageEvent::ActorPose { spirit_id, .. } => spirit_id.as_ref(),
         _ => None,
     });
     assert_eq!(pose.map(|id| id.as_str()), Some("gina"));

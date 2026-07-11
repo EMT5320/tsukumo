@@ -1,50 +1,45 @@
-//! Prompt / briefing assembly hook for Phase R (relationship probe).
+//! Prompt assembly compatibility seam for the relationship probe.
 //!
-//! A1 owns the **assembly point** (`BriefingSource` + [`assemble_prompt`]).
-//! Phase R (`tsukumo-soul`) owns briefing **content**:
-//! `BriefCompiler::compile` → pass `Some(brief)` into [`assemble_prompt`].
-//! Do not depend on soul from this crate — the host wires the two.
+//! Soul owns briefing content and the future host wires it to runtime launch.
+//! This crate keeps only the assembly boundary and shared typed identities.
 
-/// Context available when assembling a runtime prompt (thin on purpose).
+use tsukumo_kernel::{QuestId, SpiritId};
+
+/// Typed context available when assembling a runtime prompt.
 #[derive(Debug, Clone, Default)]
 pub struct PromptAssemblyContext {
-    /// Soft executor identity (not a vendor string).
-    pub executor_id: Option<String>,
-    /// Quest / session label for later tracing.
-    pub quest_id: Option<String>,
+    pub spirit_id: Option<SpiritId>,
+    pub quest_id: Option<QuestId>,
 }
 
 /// Source of capacity-capped briefing text injected at prompt assembly.
-///
-/// Real content: `tsukumo_soul::BriefCompiler` (host implements this trait
-/// or calls `compile` and passes the string into [`assemble_prompt`]).
 pub trait BriefingSource {
-    fn briefing_for(&self, ctx: &PromptAssemblyContext) -> Option<String>;
+    fn briefing_for(&self, context: &PromptAssemblyContext) -> Option<String>;
 }
 
-/// Always returns `None` — placeholder until Phase R.
+/// Placeholder source used until host wires a Soul brief compiler.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NullBriefing;
 
 impl BriefingSource for NullBriefing {
-    fn briefing_for(&self, _ctx: &PromptAssemblyContext) -> Option<String> {
+    fn briefing_for(&self, _context: &PromptAssemblyContext) -> Option<String> {
         None
     }
 }
 
-/// Alias kept for call-site clarity in demos / tests.
+/// Alias retained for call-site clarity in demos and tests.
 pub type StubBriefing = NullBriefing;
 
-/// Merge an optional briefing into a base user/system prompt body.
+/// Merges an optional briefing into a base prompt body.
 ///
-/// Empty briefing → base unchanged. Non-empty → append a marked block so
-/// later §8.3 managed-region discipline can find it.
+/// The marked region remains a compatibility surface until canonical C1
+/// projection replaces this probe assembly path.
 pub fn assemble_prompt(base: &str, briefing: Option<&str>) -> String {
-    match briefing.map(str::trim).filter(|s| !s.is_empty()) {
-        None => base.to_string(),
-        Some(brief) => format!(
-            "{base}\n\n<!-- tsukumo-briefing -->\n{brief}\n<!-- /tsukumo-briefing -->"
-        ),
+    match briefing.map(str::trim).filter(|text| !text.is_empty()) {
+        None => base.to_owned(),
+        Some(brief) => {
+            format!("{base}\n\n<!-- tsukumo-briefing -->\n{brief}\n<!-- /tsukumo-briefing -->")
+        }
     }
 }
 
@@ -53,20 +48,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a1_null_briefing_leaves_base() {
-        let src = NullBriefing;
-        let ctx = PromptAssemblyContext {
-            executor_id: Some("gina".into()),
-            quest_id: Some("q1".into()),
+    fn null_briefing_leaves_base_prompt_unchanged() {
+        // Given: typed spirit and quest context with no briefing source.
+        let source = NullBriefing;
+        let context = PromptAssemblyContext {
+            spirit_id: Some(SpiritId::new("yuka")),
+            quest_id: Some(QuestId::new("quest-1")),
         };
-        assert!(src.briefing_for(&ctx).is_none());
-        assert_eq!(assemble_prompt("do the thing", None), "do the thing");
+
+        // When: the placeholder source and assembler run.
+        let briefing = source.briefing_for(&context);
+        let prompt = assemble_prompt("do the thing", briefing.as_deref());
+
+        // Then: no empty managed region is injected.
+        assert_eq!(prompt, "do the thing");
     }
 
     #[test]
-    fn a1_fixture_briefing_marks_block() {
-        let out = assemble_prompt("task", Some("user likes tea"));
-        assert!(out.contains("<!-- tsukumo-briefing -->"));
-        assert!(out.contains("user likes tea"));
+    fn fixture_briefing_uses_explicit_marked_region() {
+        // Given: one reviewed compatibility briefing.
+        let briefing = "user likes tea";
+
+        // When: it is assembled into the prompt.
+        let prompt = assemble_prompt("task", Some(briefing));
+
+        // Then: the region remains explicit and discoverable.
+        assert!(prompt.contains("<!-- tsukumo-briefing -->"));
+        assert!(prompt.contains(briefing));
     }
 }

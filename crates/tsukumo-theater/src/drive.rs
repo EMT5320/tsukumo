@@ -7,21 +7,13 @@ use crate::world::StageWorld;
 use tsukumo_kernel::KernelEvent;
 
 /// Apply one kernel event through Director into the stage world.
-pub fn drive_kernel_event(
-    world: &mut StageWorld,
-    event: &KernelEvent,
-    ctx: &DirectorContext,
-) {
+pub fn drive_kernel_event(world: &mut StageWorld, event: &KernelEvent, ctx: &DirectorContext) {
     let stage = direct(event, ctx);
     world.apply_all(&stage);
 }
 
 /// Replay a kernel event list (fixture / recorded session).
-pub fn drive_kernel_events(
-    world: &mut StageWorld,
-    events: &[KernelEvent],
-    ctx: &DirectorContext,
-) {
+pub fn drive_kernel_events(world: &mut StageWorld, events: &[KernelEvent], ctx: &DirectorContext) {
     for ev in events {
         drive_kernel_event(world, ev, ctx);
     }
@@ -63,7 +55,7 @@ mod tests {
         assert!(
             snap.log_tail
                 .as_deref()
-                .is_some_and(|t| t.contains("turn_or_quest_end")),
+                .is_some_and(|t| t.contains("outcome")),
             "tail={:?}",
             snap.log_tail
         );

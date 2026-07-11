@@ -1,118 +1,193 @@
-//! Minimal playable [`KernelEvent`] set for Path B / P0.
+//! Versioned, vendor-neutral Chronicle event contract.
 //!
-//! Vendor / ACP / stream-json details stay in adapters — never on these variants.
+//! Adapters create KernelEventPayload values. The host assigns the durable
+//! envelope fields before the event can enter Chronicle, replay, or theater.
 
-use crate::identity::{BackendKind, ExecutorId};
+use crate::identity::{
+    CheckpointId, CorrelationId, EventId, ExecutionId, ProjectionId, QuestId, RuntimeBinding,
+    SessionId, SpiritId, StateId,
+};
+use crate::value::{PersistedJson, PersistedText, Timestamp};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-/// Normalized tool outcome. Keep this vendor-agnostic.
+/// Current wire version for KernelEvent.
+pub const KERNEL_EVENT_SCHEMA_VERSION: u16 = 1;
+
+/// Namespaced identifier retained from a vendor runtime event.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct VendorEventRef {
+    pub namespace: String,
+    pub id: String,
+}
+
+impl VendorEventRef {
+    /// Creates a vendor reference without reusing it as a global event ID.
+    pub fn new(namespace: impl Into<String>, id: impl Into<String>) -> Self {
+        Self {
+            namespace: namespace.into(),
+            id: id.into(),
+        }
+    }
+}
+
+/// Normalized tool outcome suitable for Chronicle and theater.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ToolResult {
-    /// Short human-readable summary suitable for logs / later stage copy.
-    pub summary: String,
-    /// Optional structured payload (already normalized by the adapter).
+    pub summary: PersistedText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub data: Option<Value>,
+    pub data: Option<PersistedJson>,
 }
 
 impl ToolResult {
-    pub fn text(summary: impl Into<String>) -> Self {
+    /// Creates a text-only result after boundary review.
+    pub fn reviewed_text(summary: impl Into<String>) -> Self {
         Self {
-            summary: summary.into(),
+            summary: PersistedText::from_reviewed(summary),
             data: None,
         }
     }
 }
 
-/// Upper-layer contract: adapters produce this; theater never sees vendor types.
+/// Runtime lifecycle phase recorded by the host.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RuntimePhase {
+    Starting,
+    Started,
+    Stopping,
+    Completed,
+    Failed,
+    Cancelled,
+}
+
+/// User decision for one permission request.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PermissionDecision {
+    AllowOnce,
+    AllowSession,
+    Deny,
+}
+
+/// Canonical state lifecycle action exposed as Chronicle evidence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StateLifecycleAction {
+    Created,
+    Superseded,
+    Revoked,
+}
+
+/// Terminal execution or quest outcome.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OutcomeStatus {
+    Succeeded,
+    Failed,
+    Cancelled,
+    PermissionDenied,
+    SafetyUnsupported,
+    Degraded,
+    TimedOut,
+    MalformedOutput,
+    NonZeroExit,
+    LaunchFailed,
+}
+
+/// Vendor-neutral facts emitted by adapters, host, and state persistence.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
-pub enum KernelEvent {
-    /// A tool / capability invocation began.
+pub enum KernelEventPayload {
+    UserInput {
+        content: PersistedText,
+    },
+    LegacyImported {
+        source_id: String,
+        kind: String,
+        content: PersistedText,
+    },
+    RuntimeLifecycle {
+        phase: RuntimePhase,
+    },
+    RuntimeSwitched {
+        previous: Option<RuntimeBinding>,
+        current: RuntimeBinding,
+    },
     ToolStart {
-        call_id: String,
+        vendor_call: VendorEventRef,
         tool: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        args: Option<Value>,
+        args: Option<PersistedJson>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        backend: Option<BackendKind>,
+        projection_id: Option<ProjectionId>,
     },
-    /// A tool / capability invocation finished.
     ToolEnd {
-        call_id: String,
+        vendor_call: VendorEventRef,
         result: ToolResult,
         is_error: bool,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        backend: Option<BackendKind>,
+        projection_id: Option<ProjectionId>,
     },
-    /// Runtime is blocked on human permission / approval.
-    WaitingPermission {
-        request_id: String,
-        /// Short reason already normalized (e.g. "shell: rm -rf").
-        reason: String,
+    PermissionRequested {
+        vendor_request: VendorEventRef,
+        tool: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
+        arguments: Option<PersistedJson>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        backend: Option<BackendKind>,
+        cwd: Option<PersistedText>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        risk_reasons: Vec<PersistedText>,
+        reason: PersistedText,
     },
-    /// Turn or quest completed — enough for settlement / attention reset.
-    TurnOrQuestEnd {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        quest_id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        summary: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        backend: Option<BackendKind>,
+    PermissionDecided {
+        vendor_request: VendorEventRef,
+        decision: PermissionDecision,
     },
-    /// Recoverable or fatal error surfaced to the host.
+    StateLifecycle {
+        state_id: StateId,
+        action: StateLifecycleAction,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        prior_state_id: Option<StateId>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reason: Option<PersistedText>,
+    },
+    CheckpointCreated {
+        checkpoint_id: CheckpointId,
+        version: u64,
+    },
+    ProjectionCreated {
+        projection_id: ProjectionId,
+        checkpoint_id: CheckpointId,
+    },
+    Outcome {
+        status: OutcomeStatus,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        summary: Option<PersistedText>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        projection_id: Option<ProjectionId>,
+    },
     Error {
-        message: String,
+        message: PersistedText,
         recoverable: bool,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        backend: Option<BackendKind>,
     },
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::identity::{BackendKind, ExecutorId};
-
-    #[test]
-    fn tool_start_roundtrips() {
-        let ev = KernelEvent::ToolStart {
-            call_id: "c1".into(),
-            tool: "read".into(),
-            args: Some(serde_json::json!({"path": "README.md"})),
-            executor_id: Some(ExecutorId::new("gina")),
-            backend: Some(BackendKind::Fixture),
-        };
-        let json = serde_json::to_string(&ev).unwrap();
-        let back: KernelEvent = serde_json::from_str(&json).unwrap();
-        assert_eq!(back, ev);
-        assert!(json.contains("\"type\":\"tool_start\""));
-        assert!(!json.contains("claude"));
-        assert!(!json.contains("acp"));
-    }
-
-    #[test]
-    fn waiting_permission_roundtrips() {
-        let ev = KernelEvent::WaitingPermission {
-            request_id: "p1".into(),
-            reason: "shell: git push".into(),
-            executor_id: None,
-            backend: None,
-        };
-        let back: KernelEvent = serde_json::from_str(&serde_json::to_string(&ev).unwrap()).unwrap();
-        assert_eq!(back, ev);
-    }
+/// Durable event envelope shared by live input, Chronicle, replay, and tests.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct KernelEvent {
+    pub schema_version: u16,
+    pub event_id: EventId,
+    pub occurred_at: Timestamp,
+    pub quest_id: QuestId,
+    pub session_id: SessionId,
+    pub spirit_id: SpiritId,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub execution_id: Option<ExecutionId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runtime: Option<RuntimeBinding>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub causation_id: Option<EventId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub correlation_id: Option<CorrelationId>,
+    pub payload: KernelEventPayload,
 }

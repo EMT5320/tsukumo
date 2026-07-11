@@ -1,7 +1,7 @@
 //! Minimal [`StageEvent`] set for P0. Theater never sees vendor payloads.
 
 use serde::{Deserialize, Serialize};
-use tsukumo_kernel::ExecutorId;
+use tsukumo_kernel::SpiritId;
 
 /// Coarse actor body language for the pixel stage (S1 will animate these).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -31,17 +31,17 @@ pub enum StageEvent {
     ActorPose {
         pose: ActorPose,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
+        spirit_id: Option<SpiritId>,
     },
     Bubble {
         text: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
+        spirit_id: Option<SpiritId>,
     },
     LogLine {
         text: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        executor_id: Option<ExecutorId>,
+        spirit_id: Option<SpiritId>,
     },
     AttentionTier {
         tier: AttentionTier,
@@ -56,7 +56,7 @@ mod tests {
     fn stage_event_json_has_no_vendor_keys() {
         let ev = StageEvent::Bubble {
             text: "working…".into(),
-            executor_id: Some(ExecutorId::new("gina")),
+            spirit_id: Some(SpiritId::new("gina")),
         };
         let json = serde_json::to_string(&ev).unwrap();
         assert!(json.contains("\"type\":\"bubble\""));

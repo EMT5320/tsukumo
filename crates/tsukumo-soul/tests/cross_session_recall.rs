@@ -1,6 +1,7 @@
 //! R4: cross-session recall — session1 writes a fact, session2 brief/recall hits it.
 
 use tempfile::tempdir;
+use tsukumo_kernel::{QuestId, SessionId};
 use tsukumo_soul::{
     assemble_delegation_prompt, assemble_with_trace, BriefCompiler, BriefOptions, FactKind,
     SkillSocket, SkillStub, SoulStore, TraceEvent, TraceLog, DEFAULT_BRIEF_CHAR_CAP,
@@ -41,7 +42,7 @@ fn r4_cross_session_recall_hits_prior_fact() {
             .append(TraceEvent::Recall {
                 query: "gnu toolchain".into(),
                 hit_count: hits.len(),
-                session_id: Some("session-2".into()),
+                session_id: Some(SessionId::new("session-2")),
             })
             .unwrap();
 
@@ -59,9 +60,10 @@ fn r4_cross_session_recall_hits_prior_fact() {
         let prompt = assemble_with_trace(
             &brief,
             "Run the theater fixture replay",
-            Some("quest-r4"),
+            Some(&QuestId::new("quest-r4")),
             Some(&mut trace),
-        );
+        )
+        .expect("append inject trace");
         assert!(prompt.contains("Relationship brief"));
         assert!(prompt.contains("Run the theater fixture replay"));
         assert!(!prompt.contains("傲娇"));

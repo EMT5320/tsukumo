@@ -8,6 +8,7 @@
 
 use std::env;
 use std::path::PathBuf;
+use tsukumo_kernel::{QuestId, SessionId};
 use tsukumo_soul::{
     assemble_with_trace, BriefCompiler, BriefOptions, SkillSocket, SkillStub, SoulStore,
     TraceEvent, TraceLog, DEFAULT_BRIEF_CHAR_CAP,
@@ -35,7 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Last workshop check used HalfBlock fixture replay",
         )?;
         println!("session-1: wrote USER + MEMORY facts");
-        println!("--- USER.md ---\n{}", store.read_snapshot(tsukumo_soul::FactKind::User)?);
+        println!(
+            "--- USER.md ---\n{}",
+            store.read_snapshot(tsukumo_soul::FactKind::User)?
+        );
     }
 
     // Session 2
@@ -51,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         trace.append(TraceEvent::Recall {
             query: "gnu".into(),
             hit_count: hits.len(),
-            session_id: Some("session-2".into()),
+            session_id: Some(SessionId::new("session-2")),
         })?;
 
         let brief = BriefCompiler::new(BriefOptions {
@@ -64,9 +68,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let prompt = assemble_with_trace(
             &brief,
             "Continue the workshop check",
-            Some("demo-quest"),
+            Some(&QuestId::new("demo-quest")),
             Some(&mut trace),
-        );
+        )?;
 
         println!("--- brief ---\n{brief}");
         println!("--- assembled prompt ---\n{prompt}");

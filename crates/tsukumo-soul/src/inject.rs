@@ -11,8 +11,9 @@
 //! depend on adapters yet. No anime personality words — facts only.
 
 use crate::brief::{BriefCompiler, BriefOptions};
-use crate::store::{SoulError, SoulStore};
+use crate::storage::{SoulError, SoulStore};
 use crate::trace::{TraceEvent, TraceLog};
+use tsukumo_kernel::QuestId;
 
 /// Trait for assembling a runtime delegation prompt (soul-side).
 ///
@@ -64,10 +65,7 @@ pub fn assemble_delegation_prompt(brief: &str, user_goal: &str) -> String {
 }
 
 /// Compile a brief from the store (helper for A1 `BriefingSource` impls).
-pub fn compile_briefing(
-    store: &SoulStore,
-    options: BriefOptions,
-) -> Result<String, SoulError> {
+pub fn compile_briefing(store: &SoulStore, options: BriefOptions) -> Result<String, SoulError> {
     BriefCompiler::new(options).compile(store)
 }
 
@@ -75,18 +73,18 @@ pub fn compile_briefing(
 pub fn assemble_with_trace(
     brief: &str,
     user_goal: &str,
-    quest_id: Option<&str>,
+    quest_id: Option<&QuestId>,
     trace: Option<&mut TraceLog>,
-) -> String {
+) -> Result<String, SoulError> {
     let prompt = assemble_delegation_prompt(brief, user_goal);
     if let Some(log) = trace {
-        let _ = log.append(TraceEvent::Inject {
-            quest_id: quest_id.map(|s| s.to_string()),
+        log.append(TraceEvent::Inject {
+            quest_id: quest_id.cloned(),
             brief_chars: brief.chars().count(),
             goal_chars: user_goal.chars().count(),
-        });
+        })?;
     }
-    prompt
+    Ok(prompt)
 }
 
 #[cfg(test)]

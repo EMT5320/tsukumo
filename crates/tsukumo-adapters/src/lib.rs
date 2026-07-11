@@ -1,10 +1,6 @@
-//! Tsukumo drive adapters (A1): structured streams → [`KernelEvent`].
+//! Runtime adapters normalize vendor streams into shared kernel payloads.
 //!
-//! Default channel: Claude-like `stream-json` NDJSON (own-process / recorded).
-//! Full ACP client is deferred — see task `notes-a1-channel.md`.
-//!
-//! Theater never sees vendor payloads; only normalized kernel events leave here.
-//! Stage wiring lives in integration tests / examples (adapters stay vendor-side).
+//! Adapters never assign durable event IDs or own Chronicle persistence.
 
 pub mod briefing;
 pub mod stream_json;
@@ -15,6 +11,6 @@ pub use briefing::{
 };
 pub use stream_json::{
     parse_stream_json_line, parse_stream_json_reader, parse_stream_json_str, AdapterError,
-    StreamJsonOptions,
+    DecodeError,
 };
-pub use synthetic::{synthetic_demo_events, synthetic_demo_stream_jsonl};
+pub use synthetic::{synthetic_demo_payloads, synthetic_demo_stream_jsonl};

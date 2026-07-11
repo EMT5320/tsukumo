@@ -8,10 +8,10 @@ use crate::world::{Motion, StageWorld};
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
+use ratatui::symbols::Marker;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::canvas::{Canvas, Points};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
-use ratatui::symbols::Marker;
 
 /// Default demo frame size (fits a modest Windows Terminal pane).
 pub const DEFAULT_FRAME_WIDTH: u16 = 72;
@@ -70,9 +70,7 @@ fn attention_style(tier: AttentionTier) -> Style {
     match tier {
         AttentionTier::Ambient => Style::default().fg(Color::DarkGray),
         AttentionTier::Focus => Style::default().fg(Color::Cyan),
-        AttentionTier::Urgent => Style::default()
-            .fg(Color::Red)
-            .add_modifier(Modifier::BOLD),
+        AttentionTier::Urgent => Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
     }
 }
 
@@ -237,10 +235,7 @@ fn sprite_points(ax: f64, ay: f64, motion: Motion) -> Vec<(f64, f64)> {
 fn render_log(world: &StageWorld, area: Rect, buf: &mut Buffer) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(Span::styled(
-            " 日志 ",
-            Style::default().fg(Color::Blue),
-        ));
+        .title(Span::styled(" 日志 ", Style::default().fg(Color::Blue)));
     let inner = block.inner(area);
     block.render(area, buf);
 
@@ -279,47 +274,4 @@ fn truncate_chars(s: &str, max: usize) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::stage::StageEvent;
-    use tsukumo_kernel::ExecutorId;
-
-    #[test]
-    fn static_workshop_shows_title_and_sprite_region() {
-        let mut world = StageWorld::new();
-        world.ensure_placeholder("gina");
-        let frame = render_frame_string(&world, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
-        assert!(
-            frame.contains("工房"),
-            "workshop title missing:\n{frame}"
-        );
-        assert!(
-            frame.contains("gina"),
-            "executor soft-id missing:\n{frame}"
-        );
-        // Border / block art should leave non-space content in the stage pane.
-        let non_space = frame.chars().filter(|c| !c.is_whitespace()).count();
-        assert!(non_space > 40, "frame looks empty:\n{frame}");
-    }
-
-    #[test]
-    fn split_log_consumes_stage_events() {
-        let mut world = StageWorld::new();
-        world.ensure_placeholder("gina");
-        world.apply(&StageEvent::Bubble {
-            text: "干活中".into(),
-            executor_id: Some(ExecutorId::new("gina")),
-        });
-        world.apply(&StageEvent::LogLine {
-            text: "tool_start read (c1)".into(),
-            executor_id: None,
-        });
-        let frame = render_frame_string(&world, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
-        assert!(frame.contains("干活中"), "bubble missing:\n{frame}");
-        assert!(frame.contains("日志"), "log pane title missing:\n{frame}");
-        assert!(
-            frame.contains("tool_start"),
-            "log line missing:\n{frame}"
-        );
-    }
-}
+mod tests;

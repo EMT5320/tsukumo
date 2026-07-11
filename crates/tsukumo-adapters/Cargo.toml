@@ -13,5 +13,7 @@ thiserror = { workspace = true }
 tsukumo-kernel = { workspace = true }
 
 [dev-dependencies]
+tempfile = "3"
 serde_json = { workspace = true }
 tsukumo-theater = { workspace = true }
+tsukumo-soul = { workspace = true }
