@@ -186,3 +186,37 @@ Converged V0 scope, implemented immutable checkpoints and receipt-first projecti
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Complete C1 Host runtime
+
+**Date**: 2026-07-11
+**Task**: Complete C1 Host runtime
+**Branch**: `main`
+
+### Summary
+
+Implemented and verified the receipt-first Claude Host, bounded process lifecycle, incremental Chronicle-before-Theater flow, fail-closed Safety Plane, observable vendor skips, and an isolated allowlisted live smoke.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4f8231c` | (see git log) |
+| `b22b71a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
