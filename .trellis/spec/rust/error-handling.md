@@ -75,3 +75,8 @@ Current reference patterns:
 - `OutcomeStatus` reserves distinct wire values for `PermissionDenied`,
   `SafetyUnsupported`, and `Degraded`. Do not encode these as cancellation,
   generic failure, or summary text.
+- `HostError` separates receipt/runtime preflight, duplicate execution,
+  permission-evidence/scope failure, clock failure, and Chronicle failure.
+  Chronicle/clock failures while a process is live retain both cleanup status
+  and the typed cleanup error. Controlled runtime failures return one
+  `ExecutionReport` with distinct status/failure/detail fields.

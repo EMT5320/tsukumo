@@ -2,65 +2,68 @@
 
 ## Preconditions
 
-- [ ] Contracts and handoff/projection children are archived and committed.
-- [ ] Read parent/child artifacts, runtime research and Rust architecture,
+- [x] Contracts and handoff/projection children are archived and committed.
+- [x] Read parent/child artifacts, runtime research and Rust architecture,
       runtime, persistence, error and quality specs via `trellis-before-dev`.
-- [ ] Confirm a prepared projection cannot exist before receipt commit.
+- [x] Confirm a prepared projection cannot exist before receipt commit.
 
 ## Ordered Checklist
 
 ### 1. Scaffold the Host
 
-- [ ] Add `tsukumo-host` library/binary to the workspace with one-way
+- [x] Add `tsukumo-host` library/binary to the workspace with one-way
       dependencies on kernel/adapters/soul/theater.
-- [ ] Add typed config, injected clock and testable orchestrator ports.
-- [ ] Keep `main.rs` thin and all orchestration library-testable.
+- [x] Add typed config, injected clock and testable orchestrator ports.
+- [x] Keep `main.rs` thin and all orchestration library-testable.
 
 ### 2. Build Generic Process Lifecycle
 
-- [ ] Implement command spec, process runner/handle and incremental
+- [x] Implement command spec, process runner/handle and incremental
       stdout/stderr channel.
-- [ ] Deliver prompt through stdin only; close it after the one-shot payload.
-- [ ] Bound/redact diagnostics and keep prompt out of args/env/debug/errors.
-- [ ] Implement timeout, cancellation, termination and exactly-once reap.
-- [ ] Build deterministic fake-child/fake-runner tests before live CLI wiring.
+- [x] Deliver prompt through stdin only; close it after the one-shot payload.
+- [x] Bound/redact diagnostics and keep prompt out of args/env/debug/errors.
+- [x] Implement timeout, cancellation, termination and exactly-once reap.
+- [x] Build deterministic fake-child/fake-runner tests before live CLI wiring.
 
 ### 3. Refactor the Claude Adapter
 
-- [ ] Add Claude runtime profile and safe command flags/version probe.
-- [ ] Refactor current `Read -> Vec` parser into stateful line decoder.
-- [ ] Preserve vendor IDs as provenance and classify unknown vs malformed known
+- [x] Add Claude runtime profile and safe command flags/version probe.
+- [x] Refactor current `Read -> Vec` parser into stateful line decoder.
+- [x] Preserve vendor IDs as provenance and classify unknown vs malformed known
       events.
-- [ ] Add reviewed redacted Claude JSONL fixture and decoder tests.
+- [x] Add reviewed redacted Claude JSONL fixture and decoder tests.
 
 ### 4. Wire the End-to-End Host Loop
 
-- [ ] Accept `PreparedProjection`, append lifecycle event and spawn only after
+- [x] Accept `PreparedProjection`, append lifecycle event and spawn only after
       receipt commit.
-- [ ] For each decoded payload, assign envelope IDs/correlation, commit
+- [x] For each decoded payload, assign envelope IDs/correlation, commit
       Chronicle, then drive Director/StageWorld immediately.
-- [ ] Reconcile terminal vendor event with process exit and append one outcome.
-- [ ] Stop/cancel on Chronicle failure so theater cannot outrun durable truth.
-- [ ] Trace tool start/end/outcome back to execution and projection.
+- [x] Reconcile terminal vendor event with process exit and append one outcome.
+- [x] Stop/cancel on Chronicle failure so theater cannot outrun durable truth.
+- [x] Trace tool start/end/outcome back to execution and projection.
 
 ### 5. Implement Safety Plane Seam
 
-- [ ] Add typed permission request/risk/decision/session-grant state machine.
-- [ ] Route decisions through host and Chronicle; exclude them from auto-state
+- [x] Add typed permission request/risk/decision/session-grant state machine.
+- [x] Route decisions through host and Chronicle; exclude them from auto-state
       extraction.
-- [ ] Add once/session/deny, stale request and repeated request tests.
-- [ ] Add explicit degraded/unsupported result for an unwired vendor bridge.
-- [ ] Verify command specs never use dangerous permission-bypass flags.
+- [x] Add once/session/deny, stale request and repeated request tests.
+- [x] Add explicit degraded/unsupported result for an unwired vendor bridge.
+- [x] Verify command specs never use dangerous permission-bypass flags.
 
 ### 6. Runtime Verification and Handoff
 
-- [ ] Prove first event arrives before fake process exits.
-- [ ] Prove launch failure, malformed/truncated stream, timeout, cancel,
+- [x] Prove first event arrives before fake process exits.
+- [x] Prove launch failure, malformed/truncated stream, timeout, cancel,
       non-zero exit and stderr overflow all reap and persist distinct outcomes.
-- [ ] Run default recorded-fixture integration.
-- [ ] If local Claude prerequisites exist, run opt-in safe smoke; otherwise
-      verify the enabled gate reports an actionable failure.
-- [ ] Run `trellis-check`, update specs, commit and archive child.
+- [x] Run default recorded-fixture integration.
+- [x] Run the opt-in safe smoke against local Claude 2.1.205 after renewed
+      risk approval. The allowlisted synthetic projection, empty temporary
+      directory, safe mode, zero tools, and USD 0.05 cap completed successfully
+      in 7.95 seconds on 2026-07-11.
+- [x] Run `trellis-check` and update the applicable Rust specs.
+- [ ] Commit and archive the child after the authorized live-smoke decision.
 
 ## Validation Commands
 

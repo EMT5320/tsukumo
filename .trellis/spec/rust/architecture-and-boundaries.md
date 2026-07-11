@@ -10,7 +10,7 @@ The root `Cargo.toml` defines one Rust workspace. Crates own these concerns:
 | `tsukumo-adapters` | Vendor/protocol decoding and runtime-specific transport details | Theater state, canonical soul state, presentation persona |
 | `tsukumo-soul` | Relationship-state storage, recall, briefing/checkpoint inputs, evidence traces | Vendor process control, stage rendering |
 | `tsukumo-theater` | Pure direction, stage state reduction, rendering, attention presentation | Vendor types, prompt assembly, canonical state writes |
-| future `tsukumo-host` | Composition root, process lifecycle, event envelope assignment, safety/UI coordination | A second copy of adapter parsing or soul persistence logic |
+| `tsukumo-host` | Composition root, process lifecycle, event envelope assignment, safety/UI coordination | A second copy of adapter parsing or soul persistence logic |
 
 Evidence: workspace manifests under `crates/*/Cargo.toml`, module-level contracts
 in each `src/lib.rs`, and the C1 flow in

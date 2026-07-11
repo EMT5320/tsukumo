@@ -1,18 +1,18 @@
 # Runtime Adapters
 
-## Scenario: Claude and Codex C1 Runtime Pair
+## Scenario: Claude First, Codex Extension
 
 ### 1. Scope / Trigger
 
-C1 validates continuity across the owner's two primary tools:
+C1 starts continuity with the owner's first owned-process runtime and preserves the same port for the second:
 
 - Runtime A: Claude CLI own-process `stream-json`.
-- Runtime B: Codex CLI non-interactive `codex exec --json`.
+- Planned Runtime B: Codex CLI non-interactive `codex exec --json`.
 
 Both emit JSON Lines but use different vendor schemas. Tsukumo owns each child
-process, prompt projection, lifecycle, and normalization boundary. Recorded
-vendor streams run in default CI; authenticated live cross-runtime execution is
-an explicit opt-in smoke.
+process, prompt projection, lifecycle, and normalization boundary. The reviewed
+Claude stream runs in default CI; its authenticated live execution is an
+explicit opt-in smoke. Codex conformance becomes mandatory with that profile.
 
 Evidence:
 
@@ -33,8 +33,21 @@ trait RuntimeProfile {
     fn decoder(&self) -> Box<dyn RuntimeEventDecoder>;
 }
 
+enum DecodeDisposition {
+    Emitted,
+    KnownIgnored,
+    UnknownSkipped,
+}
+
+struct DecodedRuntimeLine {
+    line_number: usize,
+    disposition: DecodeDisposition,
+    payloads: Vec<KernelEventPayload>,
+}
+
 trait RuntimeEventDecoder {
-    fn decode_line(&mut self, line: &str) -> Result<Vec<KernelEventPayload>, DecodeError>;
+    fn decode_line(&mut self, line: &str) -> Result<DecodedRuntimeLine, AdapterError>;
+    fn finish(&self) -> Result<(), AdapterError>;
 }
 
 struct RuntimeRequest {
@@ -94,12 +107,13 @@ repository instructions/rules that are part of the task environment.
 - Keep stderr/process exit status as diagnostics and lifecycle evidence; do not
   parse ordinary progress text as vendor JSONL.
 - Decode each vendor format once in its adapter, then emit shared payloads for
-  the host to envelope and persist.
+  the host to envelope and persist. Every syntactically valid line also carries
+  an `Emitted`, `KnownIgnored`, or `UnknownSkipped` disposition.
 - Preserve vendor event/item IDs as namespaced provenance for tool start/end
   correlation.
-- Default CI uses committed, redacted Claude and Codex JSONL fixtures.
-- Live smoke is opt-in (planned gate: `TSUKUMO_RUN_LIVE_SMOKE=1`) and requires
-  both CLIs plus local authentication. If explicitly enabled, missing runtime or
+- Default C1 CI uses the committed, redacted Claude JSONL fixture. Add a Codex fixture with its future profile.
+- Live smoke is opt-in (`TSUKUMO_RUN_LIVE_SMOKE=1`) and requires the selected
+  CLI plus local authentication. C1 selects Claude only. If explicitly enabled, missing runtime or
   authentication is a failure rather than a skip.
 - Live smoke runs in a controlled fixture repository with the least sandbox
   capable of the target action. Credentials and auth files never enter fixtures,
@@ -123,11 +137,11 @@ repository instructions/rules that are part of the task environment.
 
 ### 5. Good / Base / Bad Cases
 
-- **Good**: Claude and Codex fixture streams normalize to the same tool/outcome
-  contract; an opt-in local smoke proves a GNU constraint crosses between the
-  real installed tools.
-- **Base**: default CI runs both decoders and the deterministic comparison bundle without any
-  external model call.
+- **Good**: the Claude fixture and opt-in live path normalize through the same
+  tool/outcome, envelope, Chronicle, and Theater contract. Future Codex
+  conformance must reuse those ports.
+- **Base**: default CI runs the Claude decoder, Host fixture, and fake/real
+  local child contracts without an external model call.
 - **Bad**: make CI depend on personal CLI auth, or call a transcript watcher a
   drive-tier cross-runtime proof.
 
@@ -135,8 +149,8 @@ repository instructions/rules that are part of the task environment.
 
 - Per-adapter line decoder tests for tool start/end, completion/failure, unknown
   event, malformed known event, and truncated stream.
-- Shared conformance suite asserting both adapters produce equivalent normalized
-  semantics for the C1 case.
+- When Codex is implemented, add a shared conformance suite asserting both
+  adapters produce equivalent normalized semantics.
 - Incremental host test proving the first normalized event is observed before
   child completion.
 - Command-spec/privacy test proving a sentinel prompt is absent from argv, env,
@@ -144,9 +158,9 @@ repository instructions/rules that are part of the task environment.
   stdin.
 - Cancellation/reap test using a deterministic fake process.
 - Fixture secret/redaction validation.
-- Default-CI comparison bundle using recorded Claude + Codex JSONL; it persists no rendered prompt snapshot.
-- Opt-in live smoke using both locally authenticated CLIs in a disposable test
-  repository; report runtime versions with the artifact.
+- Default-CI Host bundle using recorded Claude JSONL; it persists no rendered prompt snapshot.
+- Opt-in live smoke using the selected locally authenticated CLI in a
+  disposable repository; report its runtime version.
 
 ### 7. Wrong vs Correct
 
@@ -191,3 +205,157 @@ product claim honest without placing secrets or model nondeterminism in CI.
   `validate_kernel_event` or Chronicle append.
 - The conformance path must prove adapter -> enriched envelope -> Chronicle
   reopen/replay -> Theater, in addition to pure adapter -> Theater behavior.
+
+## Implemented C1 Claude Host Boundary
+
+### 1. Scope / Trigger
+
+Use this contract whenever tsukumo-host launches a receipt-committed Claude
+projection, records a permission decision, or changes owned-process limits.
+Codex support remains a later adapter profile; C1 ships one Claude
+owned-process profile plus recorded/fake verification.
+
+### 2. Signatures
+
+~~~rust
+impl ClaudeRuntimeProfile {
+    const fn isolated_smoke() -> Self;
+}
+
+trait RuntimeProfile {
+    fn binding(&self) -> RuntimeBinding;
+    fn command(&self, launch: &RuntimeLaunchConfig)
+        -> Result<RuntimeCommandSpec, RuntimeProfileError>;
+    fn decoder(&self) -> Box<dyn RuntimeEventDecoder>;
+    fn safety_capability(&self) -> RuntimeSafetyCapability;
+}
+
+trait RuntimeEventDecoder {
+    fn decode_line(&mut self, line: &str)
+        -> Result<DecodedRuntimeLine, AdapterError>;
+    fn finish(&self) -> Result<(), AdapterError>;
+}
+
+trait ProcessRunner {
+    fn spawn(&self, launch: ProcessLaunch)
+        -> Result<Box<dyn RuntimeHandle>, ProcessError>;
+    fn process_tree_capability(&self) -> ProcessTreeCapability;
+}
+
+trait RuntimeHandle {
+    fn next(&mut self, wait: Duration) -> Result<RuntimeOutput, ProcessError>;
+    fn cancel_and_reap(&mut self) -> Result<ProcessExit, ProcessError>;
+}
+
+impl RuntimeOrchestrator {
+    fn execute(&mut self, request: ExecutionRequest<'_>)
+        -> Result<ExecutionReport, HostError>;
+
+    fn record_permission_resolution(
+        &mut self,
+        receipt: &ProjectionReceipt,
+        context: ExecutionContext,
+        resolution: PermissionResolution,
+    ) -> Result<AppendOutcome, HostError>;
+}
+~~~
+
+### 3. Contracts
+
+- RuntimeCommandSpec is immutable outside adapters and has no prompt field.
+  ProcessLaunch carries SensitiveText; StandardProcessRunner writes exact bytes
+  to stdin, flushes, closes stdin, and redacts prompt/output diagnostics.
+- Before spawn, Host reloads ProjectionReceipt from the selected HostLedger and
+  requires byte-for-byte receipt equality plus matching runtime binding.
+- Host assigns execution/runtime/correlation/projection attribution. Each event
+  enters Chronicle before drive_kernel_event; failed append never reaches
+  Theater.
+- ExecutionReport retains aggregate `known_ignored_lines` and
+  `unknown_skipped_lines` counts. It never persists raw skipped vendor payloads.
+- Claude C1 uses: -p --input-format text --output-format stream-json --verbose
+  --no-session-persistence --permission-mode dontAsk. Permission bypass flags
+  are forbidden.
+- Default process limits are 1 MiB per stdout line, 64 KiB total stderr, and 32
+  queued signals. Hard maxima are 16 MiB, 1 MiB, and 4096 respectively.
+- StandardProcessRunner reports DirectChildOnly. Product claims must not say
+  descendant process trees are managed until another runner proves it.
+- A human permission resolution is durable only when execution/runtime/session
+  scope matches the receipt and a matching PermissionRequested vendor
+  reference already exists in Chronicle.
+- TSUKUMO_RUN_LIVE_SMOKE=1 plus explicit --ignored is the only live model gate.
+  Default tests compile the live path and perform no model call.
+- The live profile runs from an empty temporary directory with `--safe-mode`,
+  `--tools ""`, a fixed minimal system prompt, disabled prompt suggestions, and
+  `--max-budget-usd 0.05`. The exact synthetic handoff is allowlisted by an
+  ordinary non-live test before any external call can be authorized.
+
+### 4. Validation & Error Matrix
+
+| Condition | Result |
+|---|---|
+| Missing/different receipt or runtime mismatch | HostError; zero spawn |
+| Duplicate deterministic start event | AlreadyExecuted; zero second spawn |
+| Invalid executable/cwd/environment key | RuntimeProfileError before spawn |
+| Output/channel limit is zero or above maximum | ProcessConfigError |
+| Poll deadline cannot fit Instant | WaitDurationTooLarge |
+| Malformed known line / missing terminal result | MalformedOutput with typed adapter detail |
+| Timeout / cancellation / non-zero exit / launch failure | Distinct status and failure |
+| Chronicle append fails while live | Cancel/reap; Theater sees no event; cleanup error retained |
+| Permission request with unwired bridge | Durable request then SafetyUnsupported |
+| Decision scope mismatch or request evidence absent | HostError; no decision append |
+| Repeat identical decision append | Chronicle duplicate; no second Theater fan-out |
+| Live gate disabled | Ignored smoke; fixture and fake paths still run |
+| Live projection differs from its reviewed literal | Offline allowlist test fails; do not launch Claude |
+
+### 5. Good / Base / Bad Cases
+
+- Good: allowlisted synthetic receipt -> isolated tool-free Claude process ->
+  incremental JSONL -> Chronicle acknowledgment -> Theater -> one outcome.
+- Base: reviewed claude_c1_success.jsonl and fake/real local child tests run
+  without credentials or model cost.
+- Bad: spawn before receipt reload, display before Chronicle acknowledgment,
+  accept unbounded output, or fabricate PermissionDecided from model output.
+
+### 6. Tests Required
+
+- runtime_profile_contract.rs: safe flags, redacted diagnostics, invalid env
+  keys, stateful terminal enforcement, and reviewed fixture.
+- process_contract.rs: exact stdin, concurrent bounded output, cancellation,
+  idempotent reap, configuration maxima, and deadline overflow.
+- orchestrator_contract.rs: receipt-first, incremental commit, attribution,
+  Chronicle-before-Theater, and cleanup-error evidence.
+- runtime_failures_contract.rs: malformed, truncated, timeout, cancellation,
+  non-zero exit, and launch failure distinctions.
+- runtime_permission_contract.rs and safety_contract.rs: once/session/deny,
+  stale/duplicate requests, durable request prerequisite, scope checks,
+  unsupported bridge, and no automatic StateRecord extraction.
+- claude_live.rs: ordinary outbound-payload allowlist test plus ignored opt-in
+  execution through the isolated profile, decoder, envelope writer, Chronicle,
+  and Theater path.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+~~~rust
+controller.decide(&vendor_request, PermissionDecision::AllowSession)?;
+runner.spawn(command_with_prompt_in_args)?;
+drive_kernel_event(&mut world, &event, &director);
+store.append_event(&event)?;
+~~~
+
+#### Correct
+
+~~~rust
+let prepared = store.prepare_projection(write)?;
+let report = host.execute(receipt_checked_request(&prepared))?;
+let resolution = controller.decide(&vendor_request, human_decision)?;
+host.record_permission_resolution(&prepared.receipt, context, resolution)?;
+~~~
+
+Host owns process mechanics and event order; adapters own vendor flags and
+decoding; Soul remains the durable authority.
+
+For a live smoke, never use the repository working directory or the standard
+profile. Construct an allowlisted synthetic projection and run
+`ClaudeRuntimeProfile::isolated_smoke()` in an empty temporary directory.
