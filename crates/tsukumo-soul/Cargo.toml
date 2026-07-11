@@ -9,6 +9,7 @@ description = "Tsukumo relationship probe: soul store, brief compiler, prompt in
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = { workspace = true }
 thiserror = { workspace = true }
 rusqlite = { version = "0.32", features = ["bundled"] }
 tsukumo-kernel = { workspace = true }

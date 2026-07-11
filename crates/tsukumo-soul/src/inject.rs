@@ -1,15 +1,11 @@
-//! Prompt assembly hook for A1 adapters / session owners.
+//! A1 compatibility prompt assembly for adapters and session owners.
 //!
-//! ## Coordination with `tsukumo-adapters`
-//! Adapters expose `BriefingSource` + `assemble_prompt` (marked
-//! `<!-- tsukumo-briefing -->` block). Phase R fills the briefing **content**:
-//!
-//! 1. `BriefCompiler::compile(&store)` → capacity-capped brief string
-//! 2. Pass `Some(brief.as_str())` into adapters' `assemble_prompt(base, briefing)`
-//!
-//! This module also offers a self-contained assembler for hosts that do not
-//! depend on adapters yet. No anime personality words — facts only.
-
+//! These helpers remain available for fixture replay and legacy integrations.
+//! They are deprecated for production launch paths because they neither use the
+//! canonical projection renderer nor commit a [`crate::ProjectionReceipt`]. New
+//! hosts must launch only the [`crate::PreparedProjection`] returned by
+//! [`SoulStore::prepare_projection`]. `assemble_with_trace` records legacy size
+//! telemetry and carries no projection-evidence claim.
 use crate::brief::{BriefCompiler, BriefOptions};
 use crate::storage::{SoulError, SoulStore};
 use crate::trace::{TraceEvent, TraceLog};
@@ -69,7 +65,10 @@ pub fn compile_briefing(store: &SoulStore, options: BriefOptions) -> Result<Stri
     BriefCompiler::new(options).compile(store)
 }
 
-/// Assemble and optionally append an inject trace line (R6 stub).
+/// Assemble and optionally append a legacy A1 size trace.
+///
+/// This trace has no checkpoint, selected-StateRef, renderer, or receipt
+/// identity and cannot establish that a production projection committed.
 pub fn assemble_with_trace(
     brief: &str,
     user_goal: &str,

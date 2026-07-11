@@ -1,4 +1,8 @@
-//! Capacity-capped brief compiler over canonical state with legacy fallback.
+//! A1 compatibility brief compiler over canonical state with legacy fallback.
+//!
+//! This independent character-capped format is deprecated for production
+//! runtime launch paths. New hosts must call [`SoulStore::prepare_projection`]
+//! so canonical rendering and immutable receipt commit both precede launch.
 //!
 //! Canonical SQLite state is preferred whenever present. The isolated A1 facts
 //! table is read only while a store has not completed explicit legacy import.
@@ -52,7 +56,10 @@ impl BriefCompiler {
         &self.options
     }
 
-    /// Compiles canonical active state, falling back to isolated legacy facts.
+    /// Compiles a legacy A1 brief, falling back to isolated legacy facts.
+    ///
+    /// The returned text has no checkpoint identity or projection receipt and
+    /// must not be treated as evidence that a production projection committed.
     pub fn compile(&self, store: &SoulStore) -> Result<String, SoulError> {
         let canonical = store.list_active_states()?;
         let mut items = canonical_items(canonical, &self.options);

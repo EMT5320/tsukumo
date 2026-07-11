@@ -121,6 +121,46 @@ impl StateScope {
         };
         serde_json::to_string(&normalized)
     }
+
+    /// Returns whether every state applicability coordinate is satisfied.
+    pub(crate) fn applies_to(&self, context: &Self) -> bool {
+        if self.subject != context.subject {
+            return false;
+        }
+        let required = self.applicability.canonicalized();
+        let available = context.applicability.canonicalized();
+        option_matches(&required.workspace, &available.workspace)
+            && option_matches(&required.operating_system, &available.operating_system)
+            && is_subset(&required.task_tags, &available.task_tags)
+            && is_subset(&required.language_tags, &available.language_tags)
+            && is_subset(
+                &required.required_capabilities,
+                &available.required_capabilities,
+            )
+    }
+
+    /// Counts applicability coordinates for deterministic specificity ranking.
+    pub(crate) fn specificity_score(&self) -> usize {
+        let applicability = self.applicability.canonicalized();
+        usize::from(applicability.workspace.is_some())
+            + usize::from(applicability.operating_system.is_some())
+            + applicability.task_tags.len()
+            + applicability.language_tags.len()
+            + applicability.required_capabilities.len()
+    }
+}
+
+fn option_matches<T: PartialEq>(required: &Option<T>, available: &Option<T>) -> bool {
+    match required {
+        None => true,
+        Some(value) => available.as_ref() == Some(value),
+    }
+}
+
+fn is_subset(required: &[String], available: &[String]) -> bool {
+    required
+        .iter()
+        .all(|value| available.binary_search(value).is_ok())
 }
 
 fn normalize_tags(tags: &mut Vec<String>) {
