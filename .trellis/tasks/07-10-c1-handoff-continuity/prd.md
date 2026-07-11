@@ -11,10 +11,10 @@
 ## Background
 
 - 北极星：`DESIGN.md`。
-- 本轮冻结共识：`docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md`。
-- 已有骨架：`tsukumo-kernel`、`tsukumo-adapters`、`tsukumo-soul`、`tsukumo-theater`。
-- 已验证零件：最小事件协议、纯 Director、fixture replay、Claude-like stream-json 解析、SQLite/FTS recall、容量封顶简报。
-- 尚未闭合：host、增量 runtime 生命周期、Chronicle、版本化 StateRecord、checkpoint、projection receipt、第二 runtime、状态到行动的证据链。
+- 领域共识：`docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md`。
+- V0 收口决议：`docs/tsukumo-v0-scope-convergence-2026-07-11.md`。
+- 已完成：版本化事件协议、Chronicle、Canonical State、StateWriter、迁移、导出与 theater replay。
+- 尚未闭合：checkpoint/projection receipt、host 与增量 runtime 生命周期、第二 runtime、可交互 TUI、发布包装和状态到行动证据链。
 
 ## Product Invariants
 
@@ -62,7 +62,7 @@
 - 每次投影记录 checkpoint、selected state refs、target runtime、execution、renderer/projection version、整体及分段 SHA-256、字符/字节长度、诚实预算单位、遗漏原因与脱敏清单。
 - tool/outcome 事件可关联回 projection。
 - 生产 Receipt、Chronicle、日志与错误默认不保存完整或原始 prompt；raw prompt 只作为 host/runtime 边界的内存秘密值存在。
-- 仅显式 debug/eval `CaseBundle` 可保存脱敏后的规范化渲染快照；快照使用独立 hash，默认七天过期，长期保留必须由用户或评测流程显式选择。
+- V0 生产模式仅持久化 Receipt 元数据与 digest；确定性 removed-state 对照使用临时或经审查的脱敏 fixture，不建立通用快照留存生命周期。
 - runtime 必须在 Receipt 成功落盘后启动；Receipt 写入失败不得产生无证据执行。
 
 ### R6 — Host and Incremental Runtime
@@ -78,7 +78,7 @@
 - 对照场景：相同任务/runtime/config，唯一变量为是否投影该状态。
 - 默认 CI 使用脱敏录制的 Claude/Codex JSONL；真实双 runtime handoff 作为本地凭证驱动的 opt-in smoke。
 - live smoke 由 `TSUKUMO_RUN_LIVE_SMOKE=1` 显式开启，记录两端 CLI 版本；开启后缺 CLI/认证属于可操作失败，不能静默 skip。
-- 形成可重复的 `CaseBundle`，记录 source events、state、checkpoint、receipt、tool calls/outcome 与比较摘要。
+- 形成确定性的 comparison bundle，记录 source events、state、checkpoint、receipt、tool calls/outcome 与比较摘要；V0 不把它升级为通用持久化产品面。
 
 ### R8 — Minimal Product Surface
 
@@ -92,6 +92,7 @@
 - 建立可在干净环境执行的 Rust toolchain/dependency 路径与 CI，至少覆盖通用 Linux 检查和 Windows GNU 目标。
 - 解决当前 rustfmt 漂移；二进制 workspace 跟踪 `Cargo.lock`，并在验证依赖 MSRV 后固定实际可用的 Rust toolchain/target。
 - 格式、check、clippy、workspace tests 的结果必须可复现；环境阻塞与代码失败分开报告。
+- 提供可安装 `tsukumo` 二进制、README、MIT LICENSE、完整 Cargo metadata、真实限制与数据/隐私说明。
 
 ## Acceptance Criteria
 
@@ -104,18 +105,20 @@
 - [ ] AC7：一次或多次 permission approval 不产生 auto-approve StateRecord，后续危险请求仍走硬确认。
 - [ ] AC8：live 与 replay 共用事件 contract；关键链路有 unit、persistence/reopen、fixture replay 和 cross-crate integration 测试，并证明 Receipt 先于 runtime 启动持久化。
 - [ ] AC9：最小 UI 能展示状态形成、撤销、handoff、permission 和 selected-state refs，不扩展角色/美术范围。
-- [ ] AC10：格式、check、clippy、测试与 CI 在记录的工具链上通过。
+- [ ] AC10：可安装二进制、README、LICENSE、tracked lockfile、工具链声明与 Linux/Windows GNU CI 在同一 release candidate 上通过。
 
 ## Task Map
 
 父任务持有完整需求、跨子任务验收和最终集成审查，默认不直接承载产品实现。
 
 1. `c1-contracts-chronicle`：R1–R3；身份、事件 envelope、Chronicle、StateRecord/StateWriter。
-2. `c1-handoff-projection`：R4–R5；checkpoint、scope selection、projection receipt、deterministic CaseBundle 基础。
+2. `c1-handoff-projection`：R4–R5；checkpoint、scope selection、projection receipt 与 deterministic comparison seam。
 3. `c1-host-runtime`：R6 + Safety Plane；增量 runtime、进程生命周期、真实投影接线。
-4. `c1-cross-runtime-ui`：R7–R9；第二 runtime、removed-state 对照、最小 UI 与最终可复现验收。
+4. `c1-cross-runtime-evidence`：R7；Codex runtime、removed-state 对照与跨 runtime 证据链。
+5. `v0-mvp-tui`：R8；状态、projection、handoff 与 permission 的最小交互面。
+6. `v0-release-packaging`：R9；可安装入口、README、许可、锁文件、工具链、CI 与发布验收。
 
-子任务按 1 → 2 → 3 → 4 顺序推进；父任务在每个边界检查 contract 与证据引用一致性。
+子任务按 1 → 2 → 3 → 4 → 5 → 6 顺序推进；父任务在每个边界检查 contract 与证据引用一致性。
 
 ## Out of Scope
 
@@ -125,3 +128,4 @@
 - 图数据库和完整知识图谱 ontology。
 - 每次真实任务都运行昂贵反事实。
 - 为求职展示提前搬入完整 Loomstead evaluator。
+- V0.1 才实现通用 debug/eval prompt snapshot、七天 expiry、显式 retain、cleanup audit 与 artifact-management UI。

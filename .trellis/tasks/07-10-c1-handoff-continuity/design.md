@@ -4,8 +4,9 @@
 
 This is the parent integration design for C1. Product intent comes from
 `DESIGN.md`; the frozen domain design comes from
-`docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md`; executable Rust
-contracts come from `.trellis/spec/rust/`.
+`docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md`; the approved V0
+scope override comes from `docs/tsukumo-v0-scope-convergence-2026-07-11.md`;
+executable Rust contracts come from `.trellis/spec/rust/`.
 
 The parent task owns no feature implementation. Its children deliver the
 vertical slice in dependency order and the parent performs contract and
@@ -41,7 +42,7 @@ is a lossy view and never controls execution or writes canonical state.
 |---|---|---|
 | IDs, event envelope/payload, runtime-neutral shared value types | `tsukumo-kernel` | No vendor schema, SQL, or UI |
 | Claude/Codex command profiles and JSONL decoders | `tsukumo-adapters` | No soul storage or theater dependency |
-| Chronicle, state, checkpoint, projection, receipt, CaseBundle persistence | `tsukumo-soul` | One SQLite authority; exports derived |
+| Chronicle, state, checkpoint, projection, receipt persistence | `tsukumo-soul` | One SQLite authority; exports derived |
 | Director, view model reduction, TUI rendering | `tsukumo-theater` | No process control or canonical writes |
 | Process lifecycle, envelope assignment, transactions across ports, Safety Plane, UI actions | new `tsukumo-host` | Composition root only |
 
@@ -85,9 +86,9 @@ State selection is deterministic for a fixed database snapshot and budget.
 
 Production receipts contain IDs, selected refs, versions, SHA-256/section
 digests, lengths, explicit budget units, omission reasons, and redaction
-metadata. They contain no raw prompt. An explicit debug/eval CaseBundle may
-store a separately hashed, redacted snapshot with seven-day default expiry or
-an explicit retain decision.
+metadata. They contain no raw prompt. V0 comparison evidence is temporary or a
+reviewed redacted fixture; persistent prompt snapshots, expiry, retain, and
+cleanup audit belong to V0.1.
 
 ### Runtime and Safety
 
@@ -142,18 +143,22 @@ controlled pair supports a narrower causal comparison claim.
   pins a toolchain proven against dependencies and runs Linux plus Windows GNU
   gates.
 - Prompt text, auth files, credentials, and raw vendor transcripts never enter
-  receipts or committed CaseBundles.
+  receipts or committed comparison fixtures.
 
 ## Delivery Gates
 
 1. Contracts/Chronicle: envelope, persistence, state writer, migration and
    replay tests pass.
-2. Handoff/Projection: deterministic checkpoint/selection/receipt and synthetic
-   CaseBundle tests pass.
+2. Handoff/Projection: deterministic checkpoint/selection/receipt and
+   comparison-seam tests pass.
 3. Host/Runtime: first event arrives before process exit, receipt precedes
    spawn, cancellation reaps, and Claude fixture/live seam passes.
-4. Cross-runtime/UI: Codex conformance, removed-state case, minimal TUI and full
-   reproducible quality matrix pass.
+4. Cross-runtime evidence: Codex conformance, removed-state, traceability, and
+   post-revoke tests pass.
+5. MVP TUI: state/projection inspectors, permission modal, typed actions,
+   terminal lifecycle, resize, and CJK gates pass.
+6. Release packaging: install, README, license, lockfile, pinned toolchain,
+   Linux/Windows GNU CI, and clean-checkout smoke pass.
 
 If a child changes an upstream serialized contract, work returns to the owning
 child and all downstream fixtures are regenerated intentionally. Rollback uses

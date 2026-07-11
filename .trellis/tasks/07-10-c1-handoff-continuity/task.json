@@ -22,7 +22,9 @@
     "07-10-c1-contracts-chronicle",
     "07-10-c1-handoff-projection",
     "07-10-c1-host-runtime",
-    "07-10-c1-cross-runtime-ui"
+    "07-10-c1-cross-runtime-evidence",
+    "07-11-v0-mvp-tui",
+    "07-11-v0-release-packaging"
   ],
   "parent": null,
   "relatedFiles": [],

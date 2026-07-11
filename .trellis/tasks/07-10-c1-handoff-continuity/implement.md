@@ -2,11 +2,11 @@
 
 ## Start Rule
 
-Do not start this parent task for implementation. After owner review, start the
-first child that owns code:
+Do not start this parent task for implementation. Contracts/Chronicle is
+archived; the next code-owning child is:
 
 ```bash
-python3 ./.trellis/scripts/task.py start 07-10-c1-contracts-chronicle
+python3 ./.trellis/scripts/task.py start 07-10-c1-handoff-projection
 ```
 
 Every child must be implemented, checked, committed, finished, and archived
@@ -35,8 +35,8 @@ IDs/scope/evidence and can be replayed through theater without vendor JSON.
       selection.
 - [ ] Implement canonical renderer, production receipt, SHA-256/section
       metadata and receipt-before-launch API.
-- [ ] Implement redacted expiring CaseBundle snapshots and synthetic
-      removed-state comparison.
+- [ ] Implement a deterministic with-state/without-state comparison seam with
+      no general prompt-snapshot persistence.
 - [ ] Pass privacy, persistence and deterministic-golden tests; archive child.
 
 Integration gate: a prepared Codex projection contains the GNU StateRef and a
@@ -56,15 +56,27 @@ prompt secret.
 Integration gate: the first Claude event is committed/rendered before process
 exit, and every terminal/cancel/failure path reaps exactly once.
 
-### 4. Cross-Runtime, UI and Final Evidence
+### 4. Cross-Runtime Evidence
 
 - [ ] Add Codex `exec --json` profile/decoder and shared conformance tests.
 - [ ] Run fixture-driven and opt-in real Claude -> Codex handoff.
-- [ ] Produce with-state/without-state CaseBundle and post-revoke projection.
-- [ ] Add minimal state/projection/permission TUI over host read models/actions.
-- [ ] Track lockfile, pin proven toolchain, add Linux + Windows GNU CI and pass
-      full workspace gate.
-- [ ] Archive child, then perform parent acceptance review.
+- [ ] Produce the controlled with-state/without-state comparison and post-revoke
+      projection without a persistent snapshot subsystem.
+- [ ] Archive the child after traceability, privacy, and claim-boundary checks.
+
+### 5. MVP TUI
+
+- [ ] Add host read models and typed UI actions.
+- [ ] Add workshop status, state/projection inspectors, and permission modal.
+- [ ] Prove terminal restoration, resize, compact layout, and CJK alignment.
+- [ ] Archive the child after functional and visual checks.
+
+### 6. V0 Release Packaging
+
+- [ ] Finalize an installable `tsukumo` binary and package metadata.
+- [ ] Add README, MIT LICENSE, tracked lockfile, and proven toolchain declaration.
+- [ ] Add Linux + Windows GNU credential-free CI and clean-checkout smoke.
+- [ ] Archive the child, then perform parent acceptance review.
 
 ## Parent Acceptance Review
 
@@ -76,7 +88,7 @@ exit, and every terminal/cancel/failure path reaps exactly once.
       projections exclude inactive state.
 - [ ] Inspect Safety Plane evidence and prove approvals never enter automatic
       relationship extraction.
-- [ ] Inspect committed fixtures/CaseBundles and run secret/path validation.
+- [ ] Inspect committed comparison fixtures and run secret/path validation.
 - [ ] Run full quality gate from a clean checkout on the recorded toolchain.
 - [ ] Update specs for implementation learnings, commit, finish/archive parent,
       and record the developer journal.
