@@ -1,0 +1,19 @@
+[package]
+name = "tsukumo-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Tsukumo composition root and owned runtime lifecycle"
+
+[dependencies]
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tsukumo-adapters = { workspace = true }
+tsukumo-kernel = { workspace = true }
+tsukumo-soul = { workspace = true }
+tsukumo-theater = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tempfile = "3"

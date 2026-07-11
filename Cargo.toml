@@ -5,6 +5,7 @@ members = [
     "crates/tsukumo-theater",
     "crates/tsukumo-adapters",
     "crates/tsukumo-soul",
+    "crates/tsukumo-host",
 ]
 
 [workspace.package]

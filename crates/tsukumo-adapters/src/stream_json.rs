@@ -5,6 +5,7 @@
 
 mod mapping;
 
+use crate::runtime::{DecodeDisposition, DecodedRuntimeLine, RuntimeEventDecoder};
 use std::io::{BufRead, BufReader, ErrorKind, Read};
 use thiserror::Error;
 use tsukumo_kernel::{redact_sensitive_text, KernelEventPayload};
@@ -73,10 +74,73 @@ pub enum AdapterError {
         #[source]
         source: DecodeError,
     },
+    #[error("runtime stream ended after {lines} lines without one terminal result")]
+    TruncatedStream { lines: usize },
+    #[error("runtime stream emitted more than one terminal result on line {line}")]
+    DuplicateTerminal { line: usize },
+}
+
+/// Stateful Claude decoder shared by recorded fixtures and live stdout.
+#[derive(Debug, Default)]
+pub struct ClaudeStreamDecoder {
+    lines: usize,
+    terminal_seen: bool,
+}
+
+impl ClaudeStreamDecoder {
+    pub const fn new() -> Self {
+        Self {
+            lines: 0,
+            terminal_seen: false,
+        }
+    }
+}
+
+impl RuntimeEventDecoder for ClaudeStreamDecoder {
+    fn decode_line(&mut self, line: &str) -> Result<DecodedRuntimeLine, AdapterError> {
+        self.lines += 1;
+        let decoded = decode_runtime_line(line).map_err(|source| AdapterError::Decode {
+            line: self.lines,
+            source,
+        })?;
+        let terminal_count = decoded
+            .payloads
+            .iter()
+            .filter(|payload| matches!(payload, KernelEventPayload::Outcome { .. }))
+            .count();
+        if terminal_count > 1 || (terminal_count == 1 && self.terminal_seen) {
+            return Err(AdapterError::DuplicateTerminal { line: self.lines });
+        }
+        if terminal_count == 1 {
+            self.terminal_seen = true;
+        }
+        Ok(DecodedRuntimeLine {
+            line_number: self.lines,
+            disposition: decoded.disposition,
+            payloads: decoded.payloads,
+        })
+    }
+
+    fn finish(&self) -> Result<(), AdapterError> {
+        if self.terminal_seen {
+            Ok(())
+        } else {
+            Err(AdapterError::TruncatedStream { lines: self.lines })
+        }
+    }
+}
+
+struct ParsedRuntimeLine {
+    disposition: DecodeDisposition,
+    payloads: Vec<KernelEventPayload>,
 }
 
 /// Parses one vendor JSONL line into zero or more normalized payloads.
 pub fn parse_stream_json_line(line: &str) -> Result<Vec<KernelEventPayload>, DecodeError> {
+    Ok(decode_runtime_line(line)?.payloads)
+}
+
+fn decode_runtime_line(line: &str) -> Result<ParsedRuntimeLine, DecodeError> {
     if line.len() > MAX_LINE_BYTES {
         return Err(DecodeError::LineTooLarge {
             bytes: line.len(),
@@ -85,12 +149,43 @@ pub fn parse_stream_json_line(line: &str) -> Result<Vec<KernelEventPayload>, Dec
     }
     let trimmed = line.trim();
     if trimmed.is_empty() {
-        return Ok(Vec::new());
+        return Ok(ParsedRuntimeLine {
+            disposition: DecodeDisposition::KnownIgnored,
+            payloads: Vec::new(),
+        });
     }
-    let value = serde_json::from_str(trimmed)?;
-    mapping::map_value(&value)
+    let value: serde_json::Value = serde_json::from_str(trimmed)?;
+    let payloads = mapping::map_value(&value)?;
+    let disposition = classify_disposition(&value, &payloads);
+    Ok(ParsedRuntimeLine {
+        disposition,
+        payloads,
+    })
 }
 
+fn classify_disposition(
+    value: &serde_json::Value,
+    payloads: &[KernelEventPayload],
+) -> DecodeDisposition {
+    if !payloads.is_empty() {
+        return DecodeDisposition::Emitted;
+    }
+    match value.get("type").and_then(serde_json::Value::as_str) {
+        Some(
+            "assistant"
+            | "user"
+            | "tool_use"
+            | "tool_result"
+            | "sdk_control_request"
+            | "control_request"
+            | "result"
+            | "system"
+            | "stream_event"
+            | "rate_limit_event",
+        ) => DecodeDisposition::KnownIgnored,
+        Some(_) | None => DecodeDisposition::UnknownSkipped,
+    }
+}
 /// Parses a recorded multi-line stream while retaining line-scoped errors.
 pub fn parse_stream_json_str(body: &str) -> Result<Vec<KernelEventPayload>, AdapterError> {
     let mut payloads = Vec::new();

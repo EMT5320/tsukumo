@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","session_id":"fixture-session"}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_c1_read","name":"Read","input":{"file_path":"DESIGN.md"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_c1_read","content":"reviewed Host design"}]}}
+{"type":"result","subtype":"success","is_error":false,"result":"C1 Host fixture complete"}
