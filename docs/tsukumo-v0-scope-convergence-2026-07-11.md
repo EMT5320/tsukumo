@@ -44,8 +44,8 @@ new durable product authority. Production mode remains receipt-only.
 ## Ordered Task Tree
 
 1. `07-10-c1-contracts-chronicle` — complete.
-2. `07-10-c1-handoff-projection` — checkpoint, selection, renderer, receipt,
-   deterministic comparison seam.
+2. `07-10-c1-handoff-projection` — complete: checkpoint, selection, renderer,
+   receipt, and deterministic comparison seam.
 3. `07-10-c1-host-runtime` — composition root, Claude process lifecycle, Safety
    Plane.
 4. `07-10-c1-cross-runtime-evidence` — Codex adapter and controlled

@@ -2,11 +2,11 @@
 
 ## Start Rule
 
-Do not start this parent task for implementation. Contracts/Chronicle is
-archived; the next code-owning child is:
+Do not start this parent task for implementation. Contracts/Chronicle and
+Handoff/Projection are archived; the next code-owning child is:
 
-```bash
-python3 ./.trellis/scripts/task.py start 07-10-c1-handoff-projection
+```powershell
+python ./.trellis/scripts/task.py start 07-10-c1-host-runtime
 ```
 
 Every child must be implemented, checked, committed, finished, and archived
@@ -17,27 +17,27 @@ criteria and evidence-link compatibility.
 
 ### 1. Contracts and Chronicle
 
-- [ ] Implement typed identity, event envelope/payload and shared sensitive
+- [x] Implement typed identity, event envelope/payload and shared sensitive
       value contract.
-- [ ] Migrate all existing fixtures, adapters, theater consumers, examples and
+- [x] Migrate all existing fixtures, adapters, theater consumers, examples and
       session replay to the versioned envelope.
-- [ ] Add SQLite migrations, append-only Chronicle, StateRecord/StateWriter,
+- [x] Add SQLite migrations, append-only Chronicle, StateRecord/StateWriter,
       hybrid extractor seam and derived exports.
-- [ ] Prove legacy migration does not fabricate explicit/hard constraints.
-- [ ] Pass child quality gate and archive the child.
+- [x] Prove legacy migration does not fabricate explicit/hard constraints.
+- [x] Pass child quality gate and archive the child.
 
 Integration gate: a persisted explicit GNU constraint reopens with identical
 IDs/scope/evidence and can be replayed through theater without vendor JSON.
 
 ### 2. Handoff and Projection
 
-- [ ] Implement checkpoint version/open-loop invariants and deterministic state
+- [x] Implement checkpoint version/open-loop invariants and deterministic state
       selection.
-- [ ] Implement canonical renderer, production receipt, SHA-256/section
+- [x] Implement canonical renderer, production receipt, SHA-256/section
       metadata and receipt-before-launch API.
-- [ ] Implement a deterministic with-state/without-state comparison seam with
+- [x] Implement a deterministic with-state/without-state comparison seam with
       no general prompt-snapshot persistence.
-- [ ] Pass privacy, persistence and deterministic-golden tests; archive child.
+- [x] Pass privacy, persistence and deterministic-golden tests; archive child.
 
 Integration gate: a prepared Codex projection contains the GNU StateRef and a
 durable receipt, while all persisted/logged representations exclude a sentinel
