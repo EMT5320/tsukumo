@@ -150,3 +150,39 @@ Implemented and verified frozen event contracts, Chronicle persistence, determin
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: C1 handoff and projection MVP gate
+
+**Date**: 2026-07-11
+**Task**: C1 handoff and projection MVP gate
+**Branch**: `main`
+
+### Summary
+
+Converged V0 scope, implemented immutable checkpoints and receipt-first projections, added deterministic comparison and privacy guards, passed 105 offline workspace tests, and advanced C1 to Host/Runtime.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `64113fb` | (see git log) |
+| `537e2d4` | (see git log) |
+| `60bef70` | (see git log) |
+| `369beae` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
