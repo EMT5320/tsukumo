@@ -116,3 +116,37 @@
 - 回家后运行 `trellis-continue`，审阅提交 `6bcb20d`。
 - 重新授权 GitHub 凭据后运行 `git push origin main`；当前本地提交不得丢弃。
 - 启动 `07-10-c1-contracts-chronicle`，加载 `trellis-before-dev` 后开始实现。
+
+
+## Session 4: Complete C1 contracts and Chronicle
+
+**Date**: 2026-07-11
+**Task**: Complete C1 contracts and Chronicle
+**Branch**: `main`
+
+### Summary
+
+Implemented and verified frozen event contracts, Chronicle persistence, deterministic StateWriter, safe legacy migration, derived exports, and cross-layer replay; five-lane review passed with 94 offline tests.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `50bed37` | (see git log) |
+| `1cf9cfa` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
