@@ -63,7 +63,7 @@
       directory, safe mode, zero tools, and USD 0.05 cap completed successfully
       in 7.95 seconds on 2026-07-11.
 - [x] Run `trellis-check` and update the applicable Rust specs.
-- [ ] Commit and archive the child after the authorized live-smoke decision.
+- [x] Commit the verified work and archive the completed child.
 
 ## Validation Commands
 
