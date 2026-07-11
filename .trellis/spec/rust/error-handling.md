@@ -62,6 +62,16 @@ Current reference patterns:
   conflict, backdated transition, inactive state, expiry, and lifecycle
   mismatch. Migration fails with `InvalidStoredValue` when an inactive
   schema-one interval cannot be reconstructed.
+- `HandoffError` separates shape/secret failures, missing source/state refs,
+  version/quest mismatches, incomplete open-loop transitions, and immutable
+  checkpoint conflicts.
+- `ProjectionError` separates checkpoint/state lookup, event mismatch, budget
+  refusal, immutable receipt conflict, stored-edge corruption, and comparison
+  invariant failure. Receipt-first APIs never return `PreparedProjection` on
+  any of these errors.
+- Idempotent checkpoint/receipt retries keep the original creation EventId and
+  re-run Chronicle duplicate validation; same-ID/different-envelope attempts
+  surface `SoulError::ConflictingEvent`.
 - `OutcomeStatus` reserves distinct wire values for `PermissionDenied`,
   `SafetyUnsupported`, and `Degraded`. Do not encode these as cancellation,
   generic failure, or summary text.

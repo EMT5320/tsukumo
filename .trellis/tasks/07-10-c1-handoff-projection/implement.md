@@ -2,79 +2,77 @@
 
 ## Preconditions
 
-- [ ] Contracts/Chronicle child is archived and its schema/event contract is
+- [x] Contracts/Chronicle child is archived and its schema/event contract is
       committed.
-- [ ] Read parent/child artifacts and Rust persistence/error/quality specs with
+- [x] Read parent/child artifacts and Rust persistence/error/quality specs with
       `trellis-before-dev`.
-- [ ] Reopen the positive GNU StateRecord fixture and confirm stable IDs before
+- [x] Reopen the positive GNU StateRecord fixture and confirm stable IDs before
       building downstream references.
 
 ## Ordered Checklist
 
 ### 1. Add Checkpoint Domain Types and Storage
 
-- [ ] Implement checkpoint, progress/decision/artifact/open-loop/next-action
+- [x] Implement checkpoint, progress/decision/artifact/open-loop/next-action
       types and version identity.
-- [ ] Implement compiler validation and exhaustive open-loop transitions.
-- [ ] Implement immutable SQLite checkpoint rows, StateRef/source-event edges,
+- [x] Implement compiler validation and exhaustive open-loop transitions.
+- [x] Implement immutable SQLite checkpoint rows, StateRef/source-event edges,
       version uniqueness and reopen queries.
-- [ ] Add low-frequency trigger enum/seam without per-tool LLM calls.
+- [x] Add low-frequency trigger enum/seam without per-tool LLM calls.
 
 ### 2. Add Deterministic State Selection
 
-- [ ] Implement active/expiry/scope filters and checkpoint-pinned constraints.
-- [ ] Implement stable ranking/tie-breakers and character budget admission.
-- [ ] Return selected refs plus deterministic omission reasons.
-- [ ] Add table-driven scope/revoke/expiry/ranking/budget tests.
+- [x] Implement active/expiry/scope filters and checkpoint-pinned constraints.
+- [x] Implement stable ranking/tie-breakers and character budget admission.
+- [x] Return selected refs plus deterministic omission reasons.
+- [x] Add focused scope/revoke/expiry/ranking/budget regression tests.
 
 ### 3. Implement Canonical Projection
 
-- [ ] Freeze section order, LF/final-newline normalization and renderer version.
-- [ ] Resolve StateRefs at render time and exclude theater/persona text.
-- [ ] Return `SensitiveText`; ensure debug/error paths redact content.
-- [ ] Add SHA-256 dependency/utility and compute overall/section digests,
+- [x] Freeze section order, LF/final-newline normalization and renderer version.
+- [x] Resolve StateRefs at render time and exclude theater/persona text.
+- [x] Return `SensitiveText`; ensure debug/error paths redact content.
+- [x] Add SHA-256 dependency/utility and compute overall/section digests,
       bytes/chars and explicit budget unit.
-- [ ] Add golden and mutation tests.
+- [x] Add golden and mutation tests.
 
 ### 4. Persist Production Receipts
 
-- [ ] Implement immutable receipt and selected-state edge schema/repository.
-- [ ] Validate checkpoint/state/runtime/execution references in one transaction.
-- [ ] Expose only `PreparedProjection` after receipt commit.
-- [ ] Prove historical receipts survive state revoke/supersede unchanged.
-- [ ] Add sentinel tests showing no prompt/secret in schema, rows, Chronicle,
+- [x] Implement immutable receipt and selected-state edge schema/repository.
+- [x] Validate checkpoint/state/runtime/execution references in one transaction.
+- [x] Expose only `PreparedProjection` after receipt commit.
+- [x] Prove historical receipts survive state revoke/supersede unchanged.
+- [x] Add sentinel tests showing no prompt/secret in schema, rows, Chronicle,
       logs, errors or debug output.
 
-### 5. Add Debug/Eval CaseBundle Artifacts
+### 5. Add the Deterministic Comparison Seam
 
-- [ ] Implement named deterministic redaction profile and redaction manifest.
-- [ ] Write only redacted canonical snapshots, with independent digest.
-- [ ] Implement seven-day default expiry, controlled-clock cleanup and explicit
-      retain choice.
-- [ ] Build synthetic with-state/without-state bundle and invariant checker.
-- [ ] Add fixture/path/secret validation.
+- [x] Prepare with-state/without-state projections from one frozen input set.
+- [x] Remove only one target StateId and report selected-ref/digest differences.
+- [x] Add an invariant checker for every controlled non-target input.
+- [x] Keep outputs temporary or in reviewed redacted fixtures; add no snapshot
+      table, expiry scheduler, retain API, or cleanup audit.
+- [x] Add prompt-sentinel, fixture/path, and secret validation.
 
 ### 6. Compatibility and Quality Gate
 
-- [ ] Route `BriefCompiler`/prompt assembly compatibility through the new
-      selector/renderer or mark the facade deprecated without duplicate logic.
-- [ ] Replace `inject_trace.jsonl` claims with receipt/Chronicle evidence.
-- [ ] Run cross-layer persistence/reopen and synthetic CaseBundle tests.
-- [ ] Run `trellis-check`, update specs, commit and archive child.
+- [x] Mark `BriefCompiler`/prompt assembly as A1 compatibility-only and direct
+      production hosts to `SoulStore::prepare_projection`.
+- [x] Mark legacy inject traces as size telemetry with no projection claim.
+- [x] Run cross-layer persistence/reopen and synthetic comparison tests.
+- [x] Run `trellis-check` and update executable specs.
+- [ ] Commit and archive child.
 
 ## Validation Commands
 
-```bash
+```powershell
 git diff --check
-cargo fmt --all -- --check
-cargo test -p tsukumo-soul checkpoint
-cargo test -p tsukumo-soul projection
-cargo test -p tsukumo-soul receipt
-cargo test -p tsukumo-soul case_bundle
-cargo check --workspace --all-targets
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-python3 ./.trellis/scripts/task.py validate 07-10-c1-handoff-projection
+cargo +stable-x86_64-pc-windows-gnu fmt --all -- --check
+cargo +stable-x86_64-pc-windows-gnu check --workspace --all-targets --offline
+cargo +stable-x86_64-pc-windows-gnu clippy --workspace --all-targets --offline -- -D warnings
+cargo +stable-x86_64-pc-windows-gnu test --workspace --offline
+$env:RUSTDOCFLAGS = '-D warnings'; cargo +stable-x86_64-pc-windows-gnu doc --workspace --no-deps --offline
+python ./.trellis/scripts/task.py validate 07-10-c1-handoff-projection
 ```
 
 Test filters are illustrative until module/test names land; the unfiltered
@@ -87,5 +85,5 @@ workspace command is the authoritative gate.
 - The `SensitiveText` exposure point must stay narrow; code review every call.
 - Receipt insertion and selected-ref insertion share one transaction. A partial
   receipt is invalid.
-- Cleanup deletes only snapshot artifact bytes, never receipts/checkpoints or
-  audit metadata.
+- V0 must not add persistent prompt-snapshot columns/tables or a second durable
+  artifact authority.

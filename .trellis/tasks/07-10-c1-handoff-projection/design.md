@@ -4,8 +4,8 @@
 
 This child consumes the first child's Chronicle and StateRepository. It creates
 versioned handoff checkpoints, deterministic projection selection/rendering,
-immutable receipts, and a runtime-free CaseBundle seam. It does not spawn a
-vendor process.
+immutable receipts, and a runtime-free comparison seam. It does not spawn a
+vendor process or persist debug prompt snapshots.
 
 ## HandoffCheckpoint
 
@@ -15,11 +15,11 @@ pub struct HandoffCheckpoint {
     pub quest_id: QuestId,
     pub version: u64,
     pub previous_id: Option<CheckpointId>,
-    pub goal: String,
+    pub goal: PersistedText,
     pub progress: Vec<ProgressItem>,
     pub decisions: Vec<Decision>,
     pub constraint_refs: Vec<StateRef>,
-    pub artifacts: Vec<ArtifactRef>,
+    pub artifacts: Vec<ArtifactReference>,
     pub open_loops: Vec<OpenLoop>,
     pub next_actions: Vec<NextAction>,
     pub source_event_refs: Vec<EventId>,
@@ -94,44 +94,39 @@ Only `PreparedProjection` may be passed to the future host. A receipt failure
 returns an error and no launchable value. Historical receipts never change when
 a state is revoked or superseded.
 
-## Debug/Eval Snapshot and CaseBundle
+## Deterministic Comparison Seam
 
-Production mode stores no rendered text. Explicit debug/eval mode:
+V0 production mode stores no rendered text and adds no debug snapshot table or
+artifact lifecycle. A pure comparison helper prepares two projections from the
+same repository snapshot and request. The without-state request excludes one
+target StateId; all other checkpoint, runtime, execution-independent config,
+renderer version, budget, and non-target state inputs remain equal.
 
-1. applies a named deterministic redaction profile in memory;
-2. verifies sentinel secrets are absent;
-3. stores the redacted canonical snapshot as a separate CaseBundle artifact;
-4. hashes the redacted bytes independently;
-5. records expiring retention (seven days by default) or explicit retain.
-
-Cleanup deletes expired snapshot bytes while retaining artifact identity,
-digest, redaction/expiry metadata, and an audit result. Reviewed committed
-fixtures are synthetic/recorded assets and use a separate provenance marker.
-
-`CaseBundle` contains fixed inputs, state snapshot, checkpoint, receipt,
-expected runtime events/outcome, and comparison metadata. Its synthetic
-with-state/without-state pair differs only in the target state inclusion and
-dependent projection digests.
+The helper reports selected-ref and digest differences plus an invariant
+manifest. Tests use temporary values or reviewed redacted fixtures. Persistent
+redacted prompt snapshots, seven-day expiry, explicit retain, cleanup audit,
+and general evaluation artifact storage belong to V0.1.
 
 ## Compatibility
 
-The existing `BriefCompiler`/`assemble_delegation_prompt` remain temporary A1
-facades or are migrated to use the new selector/renderer. They must not keep an
-independent selection algorithm. The old `inject_trace.jsonl` is replaced by
-receipt/Chronicle evidence rather than expanded into another authority.
+The existing `BriefCompiler`, `assemble_delegation_prompt`, and
+`assemble_with_trace` remain A1 fixture/legacy compatibility surfaces. Their
+public documentation deprecates them for production launches and states that
+legacy size telemetry carries no projection-evidence claim. New hosts launch
+only `SoulStore::prepare_projection` output; receipt/Chronicle evidence owns the
+production claim.
 
 ## Test Strategy
 
 - Checkpoint version and complete open-loop transition tests.
 - Scope/revoke/expiry/ranking/budget selection table tests with stable ties.
 - Canonical renderer golden and SHA-256 mutation tests.
-- Receipt SQLite round-trip, immutability, selected-ref foreign keys, and
-  storage-before-launch type/API test.
-- Sentinel-secret tests across receipt serialization, SQL, Chronicle, errors,
-  and debug formatting.
-- Redaction-before-write, seven-day cleanup, explicit retain, and controlled
-  clock tests.
-- Synthetic removed-state CaseBundle invariant comparison.
+- Receipt SQLite round-trip, parent/edge-table immutability triggers,
+  selected-ref foreign keys, and storage-before-launch type/API test.
+- Receipt prompt-sentinel tests across serialization, SQL, Chronicle, errors,
+  logs, and debug formatting.
+- Synthetic removed-state comparison and invariant-manifest tests without
+  prompt snapshot persistence.
 
 ## Rollback
 

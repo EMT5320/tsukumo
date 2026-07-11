@@ -126,7 +126,7 @@ repository instructions/rules that are part of the task environment.
 - **Good**: Claude and Codex fixture streams normalize to the same tool/outcome
   contract; an opt-in local smoke proves a GNU constraint crosses between the
   real installed tools.
-- **Base**: default CI runs both decoders and the full CaseBundle without any
+- **Base**: default CI runs both decoders and the deterministic comparison bundle without any
   external model call.
 - **Bad**: make CI depend on personal CLI auth, or call a transcript watcher a
   drive-tier cross-runtime proof.
@@ -144,7 +144,7 @@ repository instructions/rules that are part of the task environment.
   stdin.
 - Cancellation/reap test using a deterministic fake process.
 - Fixture secret/redaction validation.
-- Default-CI CaseBundle using recorded Claude + Codex JSONL.
+- Default-CI comparison bundle using recorded Claude + Codex JSONL; it persists no rendered prompt snapshot.
 - Opt-in live smoke using both locally authenticated CLIs in a disposable test
   repository; report runtime versions with the artifact.
 
@@ -172,6 +172,13 @@ product claim honest without placing secrets or model nondeterminism in CI.
 
 ## Implemented C1 stream boundary
 
+- `BriefCompiler`, `assemble_delegation_prompt`, and `assemble_with_trace` are
+  A1 compatibility surfaces. Their size trace carries no checkpoint,
+  selected-StateRef, renderer, or receipt identity. New hosts must launch only
+  a receipt-committed `PreparedProjection`.
+- `c1_state_theater_cross_layer.rs` proves projection receipt commit, SQLite
+  reopen, Chronicle replay, and Theater metadata while a secret sentinel stays
+  confined to the in-memory launch value.
 - `parse_stream_json_reader` uses a bounded `fill_buf` loop. It stops near the
   1 MiB line limit before allocating the rest of an unterminated runtime line.
 - Known tool/result/permission shapes use typed required/optional decoders.

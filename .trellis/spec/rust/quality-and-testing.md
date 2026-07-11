@@ -36,7 +36,7 @@ cargo +stable-x86_64-pc-windows-gnu <command> --offline
 
 Do not infer remote reproducibility from this local gate. Tracking `Cargo.lock`,
 pinning the tested toolchain/target, and Linux + Windows GNU CI remain assigned
-to the cross-runtime/UI child.
+to `07-11-v0-release-packaging`.
 
 ## Test Layers
 
@@ -51,6 +51,11 @@ data crosses crates:
 | Persist/reopen/recall | `tsukumo-soul/tests/cross_session_recall.rs` |
 | Adapter-to-stage integration | `tsukumo-adapters/tests/a1_drive_stage.rs` |
 | Historical replay | `tsukumo-theater/tests/fixture_replay.rs` |
+| Checkpoint/open-loop continuity | `tsukumo-soul/tests/c1_checkpoint.rs` |
+| Projection golden/budget/selection | `tsukumo-soul/tests/c1_projection*.rs` |
+| Receipt privacy/immutability | `tsukumo-soul/tests/c1_receipt.rs` |
+| Removed-state comparison | `tsukumo-soul/tests/c1_comparison.rs` |
+| Projection-to-Theater replay | `tsukumo-adapters/tests/c1_state_theater_cross_layer.rs` |
 
 New behavior requires a test. Bug fixes require a regression that fails for
 the old behavior. Contract changes require both serialization and replay or
@@ -75,6 +80,8 @@ integration coverage.
 - Permission decisions remain outside relationship-state inference.
 - No evidence write error is swallowed.
 - No presentation copy enters runtime prompts.
+- Checkpoint/receipt rows and ordered edge tables have update/delete triggers;
+  schema tests keep prompt/snapshot fields absent.
 - Formatting, check, clippy, and tests have honest recorded outcomes.
 
 

@@ -271,19 +271,136 @@ user/structured event -> Chronicle
 
 The extractor proposes meaning; deterministic code owns durable authority.
 
+## Scenario: Versioned Handoff Checkpoints
+
+### 1. Scope / Trigger
+
+This contract applies when a runtime switch, context compression, pause,
+milestone, completion, or explicit user request requires durable task state.
+Checkpoint creation is low-frequency and always references existing Chronicle
+and canonical-state evidence.
+
+### 2. Signatures
+
+```rust
+struct HandoffCheckpoint {
+    id: CheckpointId,
+    quest_id: QuestId,
+    version: u64,
+    previous_id: Option<CheckpointId>,
+    goal: PersistedText,
+    progress: Vec<ProgressItem>,
+    decisions: Vec<Decision>,
+    constraint_refs: Vec<StateRef>,
+    artifacts: Vec<ArtifactReference>,
+    open_loops: Vec<OpenLoop>,
+    open_loop_transitions: Vec<OpenLoopTransition>,
+    next_actions: Vec<NextAction>,
+    source_event_refs: Vec<EventId>,
+    created_at: Timestamp,
+    trigger: CheckpointTrigger,
+}
+
+struct CheckpointWriteRequest {
+    checkpoint: HandoffCheckpoint,
+    event: KernelEvent, // CheckpointCreated with matching ID/version/time/quest
+}
+```
+
+Schema migration 3 owns these tables and append-only edges:
+
+```text
+handoff_checkpoints(checkpoint_id PK, quest_id, version,
+  previous_checkpoint_id FK, created_at, created_event_id FK UNIQUE,
+  checkpoint_json, UNIQUE(quest_id, version))
+checkpoint_state_refs(checkpoint_id FK, state_id FK, state_version, position,
+  PRIMARY KEY(checkpoint_id, state_id))
+checkpoint_source_refs(checkpoint_id FK, event_id FK, position,
+  PRIMARY KEY(checkpoint_id, event_id))
+```
+
+### 3. Contracts
+
+- `SoulStore::save_checkpoint` validates the complete checkpoint before opening
+  the write transaction.
+- Version 1 has no previous ID. Each later version names the immediately prior
+  checkpoint for the same quest and increments its version by one.
+- Every `source_event_ref` exists in Chronicle. Every constraint `StateRef`
+  resolves to the exact version and is active at `created_at`.
+- Every prior open loop has exactly one `Inherited`, `Completed`, `Abandoned`,
+  or `ReplacedBy` transition. Inherited IDs remain open; replacement IDs name a
+  new loop; resolved IDs disappear from the new open set.
+- The matching `CheckpointCreated` event, checkpoint JSON, StateRef edges, and
+  source-event edges commit in one transaction.
+- Update/delete triggers protect the checkpoint row and both ordered edge
+  tables. Reopening must reconstruct the same ordered value.
+- An idempotent retry must reuse the original `created_event_id`, identical
+  checkpoint content, and the identical Chronicle envelope. A changed EventId
+  or same-ID/different-envelope retry fails closed.
+- Checkpoint persisted text passes bounded-field, control-character, and shared
+  secret-material validation.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+|---|---|
+| Empty/oversized/control-bearing field or duplicate refs | `InvalidField` |
+| Persisted field resembles secret material | `SensitiveField` |
+| Creation event identity/version/time/quest differs | `EventMismatch`; no Chronicle append |
+| Source event or state is absent | `MissingSourceEvent` / `MissingState` |
+| State version differs or state is inactive at capture | `StateVersionMismatch` / `InactiveState` |
+| Previous checkpoint is absent, skips a version, or changes quest | `MissingPrevious` / `InvalidVersion` / `QuestMismatch` |
+| Prior loop has zero/multiple/invalid transitions | typed open-loop error; no write |
+| Existing checkpoint ID changes content or creation EventId | `ConflictingCheckpoint` |
+| Original creation EventId carries changed envelope content | `ConflictingEvent` |
+
+### 5. Good / Base / Bad Cases
+
+- **Good**: version 2 inherits one loop, completes another, pins an active
+  `StateRef`, and commits all edges with its Chronicle event.
+- **Base**: version 1 contains no loops or constraints and still names at least
+  one source event.
+- **Bad**: omit a previous loop from the next checkpoint or rewrite an ordered
+  edge after commit.
+
+### 6. Tests Required
+
+- `c1_checkpoint.rs`: complete loop-transition matrix, reopen equality,
+  silent-disappearance rejection, unresolved-StateRef rollback, and retry
+  EventId integrity.
+- `c1_projection_selection.rs`: a pinned state can become inactive after the
+  checkpoint and receives a deterministic projection omission.
+- Schema/privacy tests assert update/delete triggers exist for the checkpoint
+  row and both edge tables.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```text
+latest summary text -> overwrite checkpoint row -> lose prior loop identity
+```
+
+#### Correct
+
+```text
+prior checkpoint + explicit loop transitions + Chronicle/StateRefs
+  -> validate -> atomic event/checkpoint/edge commit -> immutable new version
+```
 ## Scenario: Projection Receipts Without Prompt Retention
 
 ### 1. Scope / Trigger
 
 This contract applies whenever Tsukumo renders a checkpoint and selected
-relationship state into the exact bytes passed to a runtime. The production
-ledger must prove which inputs and renderer produced the projection without
-turning secret-bearing prompts into a second transcript store.
+relationship state into the exact bytes passed to a runtime. The durable ledger
+must prove which inputs and renderer produced the projection without turning
+secret-bearing prompts into a second transcript store.
 
-The default is metadata-and-digest retention. A redacted canonical snapshot is
-allowed only in an explicitly requested debug/evaluation `CaseBundle`; raw
-unredacted prompt text is never a normal receipt, Chronicle payload, log field,
-fixture, or error value.
+V0 persists metadata and digests only. Deterministic with-state/without-state
+evidence uses temporary test values or reviewed redacted fixtures. Persistent
+redacted prompt snapshots, seven-day expiry, explicit retain, cleanup audit,
+and general artifact storage are deferred to V0.1 by
+`docs/tsukumo-v0-scope-convergence-2026-07-11.md`.
 
 ### 2. Signatures
 
@@ -299,16 +416,17 @@ struct ProjectionReceipt {
     projection_version: ProjectionVersion,
     renderer_version: RendererVersion,
     rendered_digest: ContentDigest,
+    rendered_byte_count: usize,
+    rendered_char_count: usize,
     sections: Vec<ProjectionSectionDigest>,
     budget: ProjectionBudgetUsage,
     omissions: Vec<ProjectionOmission>,
     redactions: Vec<RedactionRecord>,
-    debug_snapshot: Option<DebugSnapshotRef>,
     created_at: Timestamp,
 }
 
 struct ContentDigest {
-    algorithm: DigestAlgorithm, // C1: Sha256
+    algorithm: DigestAlgorithm, // V0: Sha256
     value: String,              // lowercase hexadecimal
 }
 
@@ -325,46 +443,57 @@ struct ProjectionBudgetUsage {
     unit: BudgetUnit,
 }
 
-struct DebugSnapshotRef {
-    artifact_id: ArtifactId,
-    redacted_digest: ContentDigest,
-    redaction_profile: String,
-    retention: SnapshotRetention,
+struct PreparedProjection {
+    receipt: ProjectionReceipt,
+    rendered_prompt: SensitiveText,
 }
 ```
 
-`SnapshotRetention` supports an expiring mode with an `expires_at` timestamp
-and an explicitly retained mode. C1 defaults live debug snapshots to seven
-days; preserving one longer requires an explicit user/evaluation choice.
-Committed runtime fixtures are separately reviewed, synthetic artifacts and
-are not live debug snapshots.
+Only `PreparedProjection` crosses from the projection service to the future
+host. It can be constructed only after the production receipt and selected-ref
+edges commit successfully.
+
+Schema migration 3 also owns:
+
+```text
+projection_receipts(projection_id PK, checkpoint_id FK, execution_id,
+  runtime_json, projection_version, renderer_version, rendered_digest,
+  rendered_byte_count, rendered_char_count, created_at,
+  created_event_id FK UNIQUE, receipt_json)
+receipt_state_refs(projection_id FK, state_id FK, state_version, position,
+  PRIMARY KEY(projection_id, state_id))
+```
+
+Both tables have update/delete triggers. `receipt_json` serializes metadata only;
+its public type contains no prompt/rendered-text field.
 
 ### 3. Contracts
 
-- Hash the exact UTF-8 bytes passed to the runtime after the renderer has
-  produced its canonical output. The renderer owns newline normalization and
-  final-newline behavior; tests freeze both.
-- Store the digest algorithm with every digest. C1 uses SHA-256 and never relies
+- Hash the exact UTF-8 bytes passed to the runtime after canonical rendering.
+  The renderer owns LF normalization and one final newline; tests freeze both.
+- Store the digest algorithm with every digest. V0 uses SHA-256 and never relies
   on a language/runtime default hasher.
-- Section digests cover the canonical bytes for each named section. They aid
-  diagnosis but do not replace `selected_state_refs` or checkpoint identity.
-- Record both budget value and unit. Character, byte, and model-token budgets
-  are not interchangeable; a token budget also identifies its tokenizer.
-- Omission entries identify the candidate state and a deterministic reason such
-  as scope mismatch, revocation, ranking, or budget exhaustion. Redaction
-  entries identify location/category/action without copying the secret value.
-- Persist the production receipt before spawning the runtime. A failed receipt
-  write means the execution does not start.
-- `rendered_prompt` remains an in-memory secret-bearing value at the host/runtime
-  boundary. Its `Debug`/`Display` representations must redact content.
-- Debug/eval mode first applies the named redaction profile, then writes the
-  redacted canonical snapshot to a separate `CaseBundle` artifact. The snapshot
-  has its own digest because it need not equal the bytes sent to the runtime.
-- Expired snapshots are deleted by deterministic cleanup; their receipt,
-  artifact identity, digest, redaction manifest, and expiry metadata remain
-  explainable. An explicit retain choice removes automatic expiry.
+- Section digests aid diagnosis and never replace checkpoint identity or
+  `selected_state_refs`.
+- Record budget value and unit. Characters, bytes, and model tokens are not
+  interchangeable; token budgets also identify a tokenizer.
+- Omission entries identify candidate state and a deterministic reason such as
+  scope mismatch, inactivity, comparison exclusion, or budget exhaustion.
+  Redaction entries identify location/category/action without copying the
+  secret value. A sensitive delegation goal records
+  `delegation_goal/sensitive_material/not_persisted`.
+- Persist the receipt before runtime spawn. A failed receipt transaction cannot
+  return a launchable value.
+- `rendered_prompt` stays an in-memory secret at the host/runtime boundary. Its
+  `Debug` and `Display` representations redact content.
 - Historical receipts remain immutable after state supersession/revocation;
   later projections use current state and create new receipts.
+- Receipt idempotency requires identical receipt metadata, the original
+  `created_event_id`, and an identical Chronicle envelope. Content-equivalent
+  retries under another EventId cannot return a launchable value.
+- V0 comparison helpers remove exactly one target StateId from one frozen input
+  set and return selected-ref/digest differences plus an invariant manifest.
+  They add no durable prompt-snapshot or artifact table.
 
 ### 4. Validation & Error Matrix
 
@@ -372,44 +501,43 @@ are not live debug snapshots.
 |---|---|
 | Selected state/checkpoint reference is missing or inapplicable | Projection validation error; write no receipt and do not spawn |
 | Renderer output differs with identical inputs/version | Determinism test failure; do not bless a new digest silently |
-| Digest algorithm or renderer version is unknown | Compatibility error; receipt is still inspectable but cannot be claimed reproducible |
-| Production receipt contains rendered text/raw prompt field | Schema/privacy test failure |
-| Secret appears in receipt, Chronicle, error, fixture, or debug snapshot | Redaction/fixture validation failure |
-| Receipt transaction fails | Do not launch the runtime |
-| Debug snapshot requested but redaction or artifact write fails | Fail the debug/eval run before launch; ordinary production mode is unaffected |
-| Snapshot expires | Delete snapshot bytes; retain receipt and deletion/audit metadata |
+| Digest algorithm or renderer version is unknown | Compatibility error; receipt remains inspectable without a reproducibility claim |
+| Receipt schema contains rendered text/raw prompt field | Schema/privacy test failure |
+| Secret appears in receipt, Chronicle, error, log, or fixture | Redaction/fixture validation failure |
+| Receipt or selected-ref transaction fails | Return no `PreparedProjection` |
+| Existing projection ID changes receipt/EventId or reuses EventId with changed envelope | `ConflictingReceipt` / `ConflictingEvent`; return no launchable value |
 | Budget unit is absent or ambiguous | Validation error |
+| With/without comparison changes a non-target controlled input | Invariant failure; comparison is invalid |
 
 ### 5. Good / Base / Bad Cases
 
-- **Good**: a GNU constraint is selected, the receipt stores its `StateRef`,
-  checkpoint/runtime/execution IDs, renderer versions, SHA-256 and section
-  digests, budget unit, and no prompt text; an opt-in CaseBundle contains a
-  separately hashed redacted snapshot with expiry.
-- **Base**: production execution stores only the immutable receipt metadata and
-  digest. The exact text can be regenerated while its renderer version remains
-  supported, but is not retained as a log.
-- **Bad**: serialize the entire prompt into `projection_receipts`, trace JSONL,
-  a panic message, or a fixture because it is convenient for debugging.
+- **Good**: a GNU constraint is selected; the receipt stores its StateRef,
+  checkpoint/runtime/execution IDs, versions, SHA-256 and section digests,
+  budget unit, omissions, and no prompt text.
+- **Base**: production execution stores only immutable receipt metadata and
+  digests. Exact bytes can be verified when the original in-memory inputs are
+  independently supplied to the supported renderer; the receipt alone cannot
+  reconstruct a non-retained delegation goal.
+- **Bad**: serialize a rendered prompt into `projection_receipts`, trace JSONL,
+  a panic message, a comparison manifest, or a fixture for convenience.
 
 ### 6. Tests Required
 
-- Golden test for canonical section ordering, newline normalization, final
-  newline behavior, and stable SHA-256 with fixed renderer inputs/version.
+- Golden test for canonical section ordering, LF/final-newline behavior, and
+  stable SHA-256 with fixed renderer inputs/version.
 - Mutation test proving a changed selected state or checkpoint changes the
   relevant section and overall digest while unrelated metadata does not.
-- Serialization/schema test proving `ProjectionReceipt` has no rendered text
-  field and serialized rows/logs do not contain a sentinel secret.
-- Storage-before-spawn integration test: forced receipt failure leaves the fake
-  runtime unstarted.
-- Debug CaseBundle test proving redaction occurs before persistence and the
-  snapshot digest describes the redacted bytes.
-- Retention test for seven-day expiry, cleanup audit metadata, and explicit
-  retain behavior using a controlled clock.
-- With-state/without-state CaseBundle test proving all variables except the
-  target state projection and resulting hashes remain equal.
-- Historical audit test proving revoke/supersede changes future selection but
+- Serialization/schema test proving `ProjectionReceipt` has no rendered-text
+  field and rows/logs exclude a sentinel secret.
+- Receipt-before-launch API/integration test: forced persistence failure yields
+  no `PreparedProjection` and the future fake runtime remains unstarted.
+- With-state/without-state comparison test proving every non-target controlled
+  input remains equal.
+- Historical audit test proving revoke/supersede changes future selection and
   does not rewrite an old receipt.
+- Concrete V0 lanes: `c1_projection.rs`, `c1_projection_budget.rs`,
+  `c1_projection_selection.rs`, `c1_receipt.rs`, `c1_comparison.rs`, and
+  `tsukumo-adapters/tests/c1_state_theater_cross_layer.rs`.
 
 ### 7. Wrong vs Correct
 
@@ -418,7 +546,7 @@ are not live debug snapshots.
 ```text
 runtime prompt -> projection_receipts.rendered_prompt
               -> trace.jsonl.prompt
-              -> test failure message
+              -> comparison_manifest.prompt
 ```
 
 #### Correct
@@ -426,14 +554,15 @@ runtime prompt -> projection_receipts.rendered_prompt
 ```text
 canonical rendered bytes (in memory)
   -> SHA-256 + section metadata -> immutable production receipt -> commit
-  -> runtime process
+  -> PreparedProjection -> runtime process
 
-explicit debug/eval only
-  -> redact -> separate expiring CaseBundle snapshot + its own digest
+controlled comparison
+  -> same frozen inputs +/- one target StateId
+  -> selected-ref/digest invariant report (no prompt persistence)
 ```
 
-The receipt proves selection and projection; the optional sanitized artifact
-supports diagnosis without making raw prompts durable by default.
+The receipt proves selection and projection. V0 comparison evidence remains
+bounded and cannot become a second durable prompt authority.
 
 ## Handoff and Projection
 
@@ -442,11 +571,9 @@ supports diagnosis without making raw prompts durable by default.
   prose.
 - Every open loop is inherited, completed, abandoned, or explicitly replaced
   in the next checkpoint version.
-- Every runtime projection follows the production receipt and optional debug
-  snapshot contract above.
+- Every runtime projection follows the production receipt contract above.
 - Store enough structured metadata for a representative removed-state
   comparison without retaining raw secret-bearing prompt text.
-
 ## Safety Separation
 
 Permission requests and user decisions belong to a deterministic Safety Plane.

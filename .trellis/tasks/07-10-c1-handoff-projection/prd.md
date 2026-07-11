@@ -3,45 +3,77 @@
 ## Parent and Dependency
 
 - Parent: `.trellis/tasks/07-10-c1-handoff-continuity`
-- Depends on: `07-10-c1-contracts-chronicle`
+- Depends on: archived `07-10-c1-contracts-chronicle`
+- V0 scope decision: `docs/tsukumo-v0-scope-convergence-2026-07-11.md`
 
 ## Goal
 
-把 Chronicle 与 Canonical State 编译成可直接接手的版本化 HandoffCheckpoint，并为每次 runtime 投影生成可解释的 ProjectionReceipt。
+Compile Chronicle and Canonical State into a versioned, actionable
+HandoffCheckpoint and commit an explainable ProjectionReceipt for every runtime
+projection before any process can launch.
 
 ## User Value
 
-主人切换工具时，新 runtime 能接到真正可继续工作的任务卷轴；之后仍能解释本次参考了哪些长期状态，同时不会把完整 prompt 长期沉积为隐私负担。
+When the owner switches tools, the next runtime receives enough task state to
+continue work. The owner can later explain which durable state was selected
+without accumulating full prompts as a privacy liability.
 
 ## Confirmed Evidence
 
-- 当前 `BriefCompiler` 只有字符容量与事实文本，没有 checkpoint/open-loop 语义或稳定 StateRef。
-- 当前 inject trace 只记录 brief/goal 字符数，无法关联 checkpoint、state、runtime 或 execution。
-- C1 已确认生产 receipt 只留结构化元数据与 digest，调试快照走显式、脱敏、限期的 CaseBundle。
+- `BriefCompiler` currently provides a character-capped fact list with no
+  checkpoint/open-loop semantics or stable StateRefs.
+- The legacy inject trace records only brief/goal lengths and cannot attribute a
+  projection to checkpoint, state, runtime, or execution.
+- Contracts/Chronicle now provides stable IDs, StateRecord lifecycle,
+  historical selection, SQLite authority, and sensitive-value boundaries.
+- V0 production persistence is receipt-only. General debug/eval prompt snapshot
+  storage, seven-day expiry, retain, and cleanup audit are deferred to V0.1.
 
 ## Requirements
 
-- 实现 checkpoint goal/progress/decisions/constraints/artifacts/open loops/next actions/state refs/source refs。
-- 实现 checkpoint 版本与 open-loop 继承/关闭规则。
-- 实现基于任务、scope、strength、新鲜度和预算的确定性 state selection seam。
-- 实现 projection renderer、版本、整体/分段 SHA-256、selected refs、runtime/execution、字符/字节长度、明确预算单位、遗漏原因与脱敏清单。
-- checkpoint、receipt 及其 state refs 与 Chronicle/Canonical State 共用 SQLite 事实源和事务完整性约束。
-- 生产 receipt、Chronicle、日志与错误不保存完整或原始 prompt；raw prompt 仅以可脱敏调试表示的内存秘密值传递。
-- 仅显式 debug/eval CaseBundle 保存脱敏规范化快照；快照使用独立 hash，默认七天过期，长期保留必须显式选择。
-- receipt 在 runtime 启动前提交；持久化失败不得继续执行。
-- 建立 deterministic CaseBundle 基础，可在无真实 runtime 时验证 with-state/without-state 输入差异。
+- Implement checkpoint goal, progress, decisions, constraint refs, artifacts,
+  open loops, next actions, state refs, source refs, and version identity.
+- Reject a new checkpoint when a prior open loop silently disappears; every
+  prior loop must be inherited, completed, abandoned, or replaced.
+- Implement deterministic state selection from checkpoint pins, scope,
+  lifecycle/expiry, strength, freshness, stable tie-breakers, and a declared
+  character budget.
+- Implement a canonical versioned renderer with stable section order, LF
+  normalization, one final newline, exact SHA-256 overall/section digests,
+  byte/character lengths, explicit budget unit, omissions, and redactions.
+- Persist checkpoint, receipt, and StateRef/source-event edges in the same
+  SQLite authority with immutable historical rows.
+- Keep raw rendered prompt bytes inside `SensitiveText`; receipt, Chronicle,
+  logs, errors, and debug representations cannot contain prompt text/secrets.
+- Expose a `PreparedProjection` only after receipt commit; persistence failure
+  cannot produce a launchable value.
+- Provide a deterministic with-state/without-state comparison seam that removes
+  one target StateId and reports invariant input/digest differences without
+  persisting prompt snapshots.
+- Clearly deprecate compatibility briefing/prompt assembly for production
+  launch paths and direct new hosts to receipt-committed projections.
 
 ## Acceptance Criteria
 
-- [ ] 新 checkpoint 能完整继承或显式关闭上一版本 open loops。
-- [ ] 硬约束使用 StateRef，展示文案变化不改变引用。
-- [ ] 不相关或 revoked 状态不进入 projection。
-- [ ] receipt 可精确重建选中状态、checkpoint、runtime、execution、renderer/projection 版本、hash、长度、遗漏/脱敏信息和预算单位。
-- [ ] 同输入与 renderer 版本产生稳定 hash。
-- [ ] receipt 序列化、数据库行、Chronicle 和错误中不出现 sentinel 原始 prompt/秘密。
-- [ ] opt-in 快照先脱敏后落盘，具有独立 hash、默认七天 expiry 与显式 retain 路径。
-- [ ] synthetic CaseBundle 可移除单条状态并保持其他变量不变。
+- [x] A new checkpoint preserves or explicitly resolves every prior open loop.
+- [x] Hard constraints use stable StateRefs; display text changes do not change
+      identity.
+- [x] Missing/unresolved pinned refs fail closed; revoked, expired, and
+      scope-inapplicable state is omitted with deterministic reasons.
+- [x] Receipt identifies checkpoint, selected refs, runtime, execution,
+      versions, hashes, lengths, redactions, omissions, and budget unit.
+- [x] Identical renderer inputs/version produce identical bytes and hashes;
+      relevant mutations change the expected section and overall hashes.
+- [x] Receipt schema/rows, Chronicle, logs, errors, and Debug output exclude a
+      sentinel prompt secret and contain no rendered-text field.
+- [x] Receipt/selected-ref transaction failure yields no `PreparedProjection`.
+- [x] Historical receipts remain unchanged after state supersede/revoke, while
+      later selection excludes inactive state.
+- [x] The deterministic comparison removes one target StateId and keeps every
+      other controlled input equal.
 
 ## Out of Scope
 
-- 真实子进程、permission UI、第二 runtime、完整 MCP recall、原始 prompt 归档和加密 transcript 仓库。
+- Real subprocesses, permission UI, second runtime, full MCP recall, raw prompt
+  archives, encrypted transcript storage, persistent debug/eval snapshots,
+  expiry/retain scheduling, cleanup audit, and general CaseBundle storage.
