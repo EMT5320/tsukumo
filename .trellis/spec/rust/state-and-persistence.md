@@ -165,6 +165,101 @@ commit
 Only committed SQLite rows define durable truth; exports remain transparent
 and portable without becoming another write authority.
 
+## Scenario: Guarded Windows Rollback-Journal Recovery
+
+### 1. Scope / Trigger
+
+This contract applies when Host opens `soul.db` on Windows while
+`LocalDirectoryGuard` holds single-link, no-follow, no-delete-share handles for
+`soul.db` and its rollback sidecars. It also applies to databases created by an
+older build that may leave a DELETE-mode hot journal after process termination.
+
+### 2. Signatures
+
+The public boundary remains:
+
+```rust
+pub fn SoulStore::open(data_dir: impl AsRef<Path>) -> Result<SoulStore, SoulError>;
+```
+
+Before migration or any other schema-loading statement, the connection executes
+this exact protocol on `main`:
+
+```sql
+PRAGMA main.locking_mode = EXCLUSIVE;
+PRAGMA main.journal_mode = PERSIST;
+PRAGMA main.locking_mode = NORMAL;
+SELECT COUNT(*) FROM main.sqlite_schema;
+```
+
+### 3. Contracts
+
+- The main database opens with `SQLITE_OPEN_NOFOLLOW`.
+- Host validates and guards `soul.db`, `soul.db-journal`, `soul.db-wal`, and
+  `soul.db-shm` before SQLite opens.
+- EXCLUSIVE locking is set before the first statement that loads schema. A
+  legacy hot journal is rolled back and finalized by zeroing its header, so the
+  no-delete-share guard stays intact.
+- `journal_mode` must return `persist`; `locking_mode` must return `exclusive`
+  and then `normal` at their respective steps.
+- The final schema read is a release barrier. Its statement must finish before
+  migration starts so another correctly configured connection can access the
+  database while the first connection remains alive.
+- Any failed step closes the connection through RAII and surfaces a typed
+  `SoulError`; Host never weakens the file guard as a recovery fallback.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+|---|---|
+| Valid DELETE-mode hot journal | Roll back interrupted pages, preserve committed data, invalidate journal header, then open in PERSIST mode |
+| Empty or already-cold persistent journal | Open normally through the same protocol |
+| Locking or journal PRAGMA returns an unexpected mode | `SoulError::InvalidStoredValue`; no migration |
+| Corrupt database or unrecoverable journal | Typed SQLite error; guard and connection handles release through RAII |
+| Reparse point, hard link, UNC path, or device alias | Host `LocalPath` rejection before SQLite |
+| Second connection uses PERSIST while the controller is live | Read and write succeed after the release barrier |
+
+### 5. Good / Base / Bad Cases
+
+- **Good**: a killed DELETE-mode writer leaves a hot journal; guarded Host open
+  restores the committed value, zeroes the hot header, returns to NORMAL
+  locking, and permits a second PERSIST connection.
+- **Base**: a clean PERSIST database follows the same sequence without recovery.
+- **Bad**: guard the journal without delete sharing, run
+  `journal_mode=PERSIST` as the first schema-loading PRAGMA, and receive
+  `SQLITE_IOERR_DELETE` while recovery tries to delete the journal.
+
+### 6. Tests Required
+
+- Windows integration test: create a committed value, kill a child during an
+  IMMEDIATE transaction after `cache_flush`, verify a valid hot-journal header,
+  and open through `HostProductController`.
+- Assert the interrupted value rolls back, the committed value survives, and
+  the journal header is no longer hot.
+- Keep the first controller alive while a second PERSIST connection reads and
+  writes the database.
+- Retain hard-link/reparse startup-race tests and runtime sidecar replacement
+  tests, proving recovery never relaxes the path capability.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```text
+open guarded files -> schema-loading journal_mode=PERSIST
+                   -> DELETE recovery tries to delete guarded journal
+                   -> SQLITE_IOERR_DELETE (2570)
+```
+
+#### Correct
+
+```text
+open guarded files -> locking_mode=EXCLUSIVE (no schema load)
+                   -> journal_mode=PERSIST triggers in-place hot recovery
+                   -> locking_mode=NORMAL
+                   -> schema read release barrier
+                   -> migrations and normal product operation
+```
 ## Scenario: Hybrid State Extraction With a Deterministic Write Gate
 
 ### 1. Scope / Trigger

@@ -22,8 +22,10 @@ V0 keeps these load-bearing guarantees:
 4. A deterministic with-state/without-state comparison keeps all controlled
    inputs equal except the target StateId and records the resulting normalized
    tool-argument difference.
-5. The TUI can explain remembered state and projection inputs, revoke state,
-   and make explicit permission decisions.
+5. The stage-first TUI can explain remembered state and projection inputs,
+   revoke state, make explicit permission decisions, and render the approved
+   Midnight Ninety-Nine Workshop through the bundled `default-shiori` pack or
+   one validated external presentation-pack directory.
 6. A clean, documented, installable build passes pinned Linux and Windows GNU
    quality gates.
 
@@ -50,12 +52,15 @@ new durable product authority. Production mode remains receipt-only.
    Plane.
 4. `07-10-c1-cross-runtime-evidence` — Codex adapter and controlled
    cross-runtime evidence.
-5. `07-11-v0-mvp-tui` — minimum interactive product surface.
+5. `07-11-v0-mvp-tui` — stage-first interactive product surface, default
+   Shiori workshop, and minimal presentation-pack boundary.
 6. `07-11-v0-release-packaging` — installability, README, license, lockfile,
    toolchain, CI, and release verification.
 
 ## Scope Guard
 
-Presentation polish, character expansion, skill evolution, idle ecology, and
-full evaluation infrastructure cannot displace the six V0 gates above. New
-scope requires an explicit task and owner decision.
+The approved default workshop, Shiori five-state identity, and minimal external
+presentation-pack loader belong to V0 gate 5. Additional characters, worlds,
+authoring tools, hot reload, skill evolution, idle ecology, and full evaluation
+infrastructure cannot displace the six V0 gates above. New scope requires an
+explicit task and owner decision.

@@ -34,6 +34,13 @@ offline:
 cargo +stable-x86_64-pc-windows-gnu <command> --offline
 ```
 
+When a change adds `unsafe` Windows filesystem FFI, every block names the FFI
+UB category and lifetime/alignment/initialization invariant in its `SAFETY`
+comment. Run strict-provenance Miri on the platform-neutral portion. Windows
+Miri cannot execute even standard-library calls such as `CreateDirectoryW`, so
+the OS boundary also requires a real Windows integration test; record that
+unsupported-operation result as a tool boundary rather than a code pass.
+
 Do not infer remote reproducibility from this local gate. Tracking `Cargo.lock`,
 pinning the tested toolchain/target, and Linux + Windows GNU CI remain assigned
 to `07-11-v0-release-packaging`.

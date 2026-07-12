@@ -13,6 +13,7 @@ backend/frontend templates created by `trellis init`.
 | Runtime process, Claude/Codex adapter, live smoke, or runtime fixture change | [Runtime Adapters](./runtime-adapters.md) |
 | Soul, Chronicle, state, checkpoint, receipt, or database change | [State and Persistence](./state-and-persistence.md) |
 | Director, StageWorld, rendering, animation, or attention change | [Theater](./theater.md) |
+| Presentation pack, product read model, TUI layout, or terminal lifecycle change | [Presentation Pack and Product TUI](./presentation-pack-and-tui.md) |
 | Fallible I/O, parsing, process, or storage change | [Error Handling](./error-handling.md) |
 | Every implementation and review | [Quality and Testing](./quality-and-testing.md) |
 

@@ -60,6 +60,9 @@ The serialized field is exactly `runtime`. `ExecutorId`, `BackendKind`, and
 - Durable text is bounded to 65,536 characters; JSON is sanitized to depth 32,
   64 items per collection, 512 characters per untrusted string, and 65,536
   serialized bytes.
+- Shared untrusted-text sanitization removes terminal controls, bidi overrides,
+  zero-width format characters, isolates, and BOM. Newline, carriage return,
+  and tab become one visible space before secret detection and persistence.
 - Outcome wire values distinguish `permission_denied`, `safety_unsupported`,
   and `degraded` from cancelled, failed, timeout, malformed output, non-zero
   exit, and launch failure.
@@ -70,7 +73,7 @@ The serialized field is exactly `runtime`. `ExecutorId`, `BackendKind`, and
 |---|---|
 | Newer/unknown schema | `EventContractError::UnsupportedSchema` |
 | Missing execution/runtime/correlation/projection | `MissingAttribution` |
-| Empty, control-bearing, oversized, or sensitive durable ID/label | `InvalidField` or `SensitiveContent` |
+| Empty, control/format-bearing, oversized, or sensitive durable ID/label | `InvalidField` or `SensitiveContent`; untrusted display text removes terminal-unsafe characters |
 | Unredacted credential in text/JSON/metadata | `SensitiveContent`; write nothing |
 | Oversized adapter or event JSONL line | typed line error with source line; stop reading near 1 MiB |
 | Malformed known vendor event | typed adapter error; never fabricate success/default IDs |
@@ -92,6 +95,8 @@ The serialized field is exactly `runtime`. `ExecutorId`, `BackendKind`, and
 - Empty semantic ID and missing attribution rejection.
 - Bounded JSONL reader that proves it stops before consuming an oversized line.
 - Adapter malformed-known-event and redaction sentinels.
+- Shared redaction regression proving bidi, zero-width, and control characters
+  cannot survive into terminal-facing persisted text.
 - Adapter -> enriched envelope -> Chronicle reopen/replay -> Theater integration.
 - SQLite replay revalidation after simulated stored-schema corruption.
 

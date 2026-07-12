@@ -37,6 +37,8 @@ must not be injected into the external runtime prompt.
   settled state is `Ambient`.
 - Chronicle/log persistence must not depend on the stage log cap.
 - Spirit selection uses persistent IDs, not vendor names.
+- `PresentationActorId` selects the rendered actor while `SpiritId` records the
+  normalized event source; preserve both fields in `StageAttribution`.
 
 ## Rendering
 
@@ -61,6 +63,7 @@ References:
 - `crates/tsukumo-theater/src/world.rs`
 - `crates/tsukumo-theater/src/render.rs`
 - `crates/tsukumo-theater/tests/fixture_replay.rs`
+- `.trellis/spec/rust/presentation-pack-and-tui.md`
 
 
 ## C1 durable text boundary
