@@ -199,7 +199,7 @@ claims, and the approved reference hierarchy is preserved.
 - [x] Run `trellis-check`.
 - [x] Update Rust specs with executable pack/attribution/rendering contracts.
 - [x] Run task validation and inspect the final diff.
-- [ ] Commit and archive through the Trellis finish flow after explicit user
+- [x] Commit and archive through the Trellis finish flow after explicit user
       authorization.
 
 ## Validation Commands

@@ -3,7 +3,7 @@
   "name": "v0-mvp-tui",
   "title": "V0 MVP TUI",
   "description": "实现状态、投影、handoff 与 permission 的最小可交互 TUI",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "EMT5320",
   "assignee": "EMT5320",
   "createdAt": "2026-07-11",
-  "completedAt": null,
+  "completedAt": "2026-07-12",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": "07-10-c1-handoff-continuity",
   "relatedFiles": [],
-  "notes": "Implementation and QA complete; commit/archive awaits explicit user authorization.",
+  "notes": "Implementation, QA, final review, and work commits complete; archive authorized by the user.",
   "meta": {}
 }
