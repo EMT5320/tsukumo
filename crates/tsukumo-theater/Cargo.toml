@@ -10,6 +10,7 @@ description = "Tsukumo L4 theater: StageEvent, pure Director, HalfBlock workshop
 serde = { workspace = true }
 serde_json = { workspace = true }
 ratatui = { workspace = true }
+thiserror = { workspace = true }
 unicode-width = "0.2"
 tsukumo-kernel = { workspace = true }
 

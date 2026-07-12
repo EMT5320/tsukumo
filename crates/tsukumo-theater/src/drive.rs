@@ -36,13 +36,14 @@ mod tests {
         let events = read_jsonl_events(fixture_path()).expect("load fixture");
         let ctx = DirectorContext::default();
         let mut world = StageWorld::new().with_log_cap(64);
-        world.ensure_placeholder("gina");
+        world.ensure_placeholder(ctx.actor_id.clone());
 
         drive_kernel_events(&mut world, &events, &ctx);
 
         let snap = world.snapshot();
         assert_eq!(snap.actors.len(), 1);
-        assert_eq!(snap.actors[0].id, "gina");
+        assert_eq!(snap.actors[0].id, "companion");
+        assert_eq!(snap.actors[0].source_spirit_id.as_deref(), Some("gina"));
         // Quest end → Celebrate pose (motion Idle).
         assert_eq!(snap.actors[0].pose, ActorPose::Celebrate);
         assert_eq!(snap.actors[0].motion, Motion::Idle);
@@ -70,15 +71,15 @@ mod tests {
     }
 
     #[test]
-    fn mid_fixture_shows_wait_then_work_path() {
+    fn mid_fixture_shows_upset_then_work_path() {
         let events = read_jsonl_events(fixture_path()).unwrap();
         let ctx = DirectorContext::default();
         let mut world = StageWorld::new();
 
-        // Through waiting_permission (index 3).
+        // Through the urgent permission request at index 3.
         drive_kernel_events(&mut world, &events[..=3], &ctx);
         let a = world.primary().expect("actor");
-        assert_eq!(a.pose, ActorPose::Wait);
+        assert_eq!(a.pose, ActorPose::Upset);
         assert_eq!(a.motion, Motion::Idle);
         assert_eq!(world.attention, AttentionTier::Urgent);
 

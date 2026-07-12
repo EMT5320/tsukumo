@@ -35,13 +35,14 @@ fn tool_start_maps_to_focus_and_work_pose() {
     // When: the pure director maps the durable event.
     let output = direct(&input, &DirectorContext::default());
 
-    // Then: theater focuses the matching spirit at work.
+    // Then: theater focuses the configured actor while retaining the source Spirit.
     assert!(output.iter().any(|stage| matches!(
         stage,
         StageEvent::ActorPose {
             pose: ActorPose::Work,
-            spirit_id: Some(id)
-        } if id.as_str() == "yuka"
+            attribution,
+        } if attribution.actor_id.as_str() == "companion"
+            && attribution.source_spirit_id.as_str() == "yuka"
     )));
     assert!(output.iter().any(|stage| matches!(
         stage,
@@ -78,7 +79,7 @@ fn permission_request_raises_urgent_and_honors_line_book() {
     assert!(output.iter().any(|stage| matches!(
         stage,
         StageEvent::ActorPose {
-            pose: ActorPose::Wait,
+            pose: ActorPose::Upset,
             ..
         }
     )));

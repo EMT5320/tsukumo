@@ -4,7 +4,7 @@ use crate::handoff_error::HandoffError;
 use crate::migrations::migrate;
 use crate::projection_error::ProjectionError;
 use crate::state_model::StateValidationError;
-use rusqlite::Connection;
+use rusqlite::{Connection, OpenFlags};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -33,6 +33,15 @@ pub enum SoulError {
     InvalidLegacyMetadata,
     #[error("legacy fact contains sensitive material")]
     SensitiveLegacyContent,
+    #[error(
+        "Chronicle read exceeds budget: {event_count}/{maximum_events} events, {byte_count}/{maximum_bytes} bytes"
+    )]
+    ChronicleReadBudgetExceeded {
+        event_count: usize,
+        byte_count: usize,
+        maximum_events: usize,
+        maximum_bytes: usize,
+    },
     #[error("event {event_id} already exists with different content")]
     ConflictingEvent { event_id: EventId },
     #[error(transparent)]
@@ -62,7 +71,45 @@ impl SoulStore {
         fs::create_dir_all(&data_dir)?;
         fs::create_dir_all(data_dir.join("skills"))?;
 
-        let mut conn = Connection::open(data_dir.join("soul.db"))?;
+        // Keep the main file no-follow and use one fixed persistent rollback sidecar.
+        let flags = OpenFlags::default() | OpenFlags::SQLITE_OPEN_NOFOLLOW;
+        let mut conn = Connection::open_with_flags(data_dir.join("soul.db"), flags)?;
+        // Recover legacy DELETE-mode hot journals in place while Host keeps its
+        // no-delete-share journal capability alive.
+        let recovery_locking_mode =
+            conn.query_row("PRAGMA main.locking_mode = EXCLUSIVE", [], |row| {
+                row.get::<_, String>(0)
+            })?;
+        if !recovery_locking_mode.eq_ignore_ascii_case("exclusive") {
+            return Err(SoulError::InvalidStoredValue {
+                field: "recovery_locking_mode",
+                value: recovery_locking_mode,
+            });
+        }
+        let journal_mode = conn.query_row("PRAGMA main.journal_mode = PERSIST", [], |row| {
+            row.get::<_, String>(0)
+        })?;
+        if !journal_mode.eq_ignore_ascii_case("persist") {
+            return Err(SoulError::InvalidStoredValue {
+                field: "journal_mode",
+                value: journal_mode,
+            });
+        }
+        // Normal locking restores multi-connection access after recovery.
+        let normal_locking_mode =
+            conn.query_row("PRAGMA main.locking_mode = NORMAL", [], |row| {
+                row.get::<_, String>(0)
+            })?;
+        if !normal_locking_mode.eq_ignore_ascii_case("normal") {
+            return Err(SoulError::InvalidStoredValue {
+                field: "locking_mode",
+                value: normal_locking_mode,
+            });
+        }
+        // Finish a normal-mode read so the pager releases recovery's exclusive lock.
+        let _: i64 = conn.query_row("SELECT COUNT(*) FROM main.sqlite_schema", [], |row| {
+            row.get(0)
+        })?;
         conn.execute_batch("PRAGMA foreign_keys = ON;")?;
         migrate(&mut conn)?;
         ensure_legacy_snapshot_files(&data_dir)?;

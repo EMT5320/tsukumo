@@ -6,8 +6,8 @@ use crate::state_model::{
     StateWriteOutcome, StateWriteRequest,
 };
 use crate::state_repository::{
-    find_active_state, has_state_created_after, insert_state, list_states, load_state,
-    next_version, update_status,
+    find_active_state, has_state_created_after, insert_state, list_states, list_states_limited,
+    load_state, next_version, update_status,
 };
 use crate::state_validation::{
     validate_draft, validate_lifecycle, validate_source_link, validate_transition_evidence,
@@ -101,6 +101,10 @@ impl SoulStore {
         self.list_active_states_at(current_timestamp()?)
     }
 
+    /// Lists at most `limit` active states for bounded product read models.
+    pub fn list_active_states_limited(&self, limit: usize) -> Result<Vec<StateRecord>, SoulError> {
+        list_states_limited(&self.conn, Some(current_timestamp()?), limit)
+    }
     /// Lists all canonical state versions selectable at one controlled instant.
     pub fn list_active_states_at(&self, as_of: Timestamp) -> Result<Vec<StateRecord>, SoulError> {
         list_states(&self.conn, Some(as_of))

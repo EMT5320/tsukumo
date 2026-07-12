@@ -5,6 +5,7 @@
 
 pub mod brief;
 pub mod chronicle;
+mod chronicle_read;
 mod comparison;
 pub mod export;
 pub mod extract;

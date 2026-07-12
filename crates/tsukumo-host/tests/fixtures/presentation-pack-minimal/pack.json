@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "id": "fixture-clerk",
+  "display_name": "Fixture Workshop",
+  "world": {
+    "name": "试作工房",
+    "subtitle": "外部展示包测试"
+  },
+  "companion": {
+    "actor_id": "fixture-clerk",
+    "display_name": "试作书记官",
+    "romanized_name": "Fixture Clerk",
+    "title": "测试记录员",
+    "owner_address": "操作者"
+  },
+  "terminology": {
+    "workshop": "测试工房",
+    "quest_board": "任务板",
+    "runtime_portal": "运行门",
+    "memory_cabinet": "状态柜",
+    "projection_desk": "投影台",
+    "permission_station": "许可台"
+  },
+  "line_book": {
+    "tool_start": "测试执行开始。",
+    "tool_end_ok": "测试执行完成。",
+    "tool_end_err": "测试执行失败。",
+    "waiting": "需要测试裁定。",
+    "outcome": "测试委托结算。",
+    "error": "测试账目异常。"
+  },
+  "palette": {
+    "colors": [
+      {
+        "name": "ink",
+        "rgb": [
+          1,
+          6,
+          12
+        ],
+        "ansi256": 232,
+        "monochrome": "black"
+      },
+      {
+        "name": "paper",
+        "rgb": [
+          217,
+          178,
+          143
+        ],
+        "ansi256": 180,
+        "monochrome": "white"
+      },
+      {
+        "name": "signal",
+        "rgb": [
+          68,
+          206,
+          222
+        ],
+        "ansi256": 80,
+        "monochrome": "gray"
+      }
+    ],
+    "roles": {
+      "ink": 0,
+      "surface": 0,
+      "border": 1,
+      "text_primary": 1,
+      "text_muted": 2,
+      "accent": 2,
+      "urgent": 1
+    }
+  },
+  "assets": {
+    "scene": "scene.json",
+    "sprite": "sprites/companion.json"
+  }
+}

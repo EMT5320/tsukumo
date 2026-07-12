@@ -92,11 +92,11 @@ fn execution_is_receipt_first_incremental_and_chronicle_before_theater() {
     assert!(world
         .log
         .iter()
-        .any(|line| line.contains("tool_start Read")));
+        .any(|line| line.text.contains("tool_start Read")));
     assert!(world
         .log
         .back()
-        .is_some_and(|line| line.contains("outcome")));
+        .is_some_and(|line| line.text.contains("outcome")));
 }
 
 #[test]
@@ -170,7 +170,10 @@ fn chronicle_failure_cancels_before_theater_can_show_the_event() {
         }
     ));
     assert_eq!(runner.cancel_count(), 1);
-    assert!(!world.log.iter().any(|line| line.contains("tool_start")));
+    assert!(!world
+        .log
+        .iter()
+        .any(|line| line.text.contains("tool_start")));
     let events = ledger.execution_events(&ExecutionId::new("execution-host"));
     assert_eq!(events.len(), 3);
 }

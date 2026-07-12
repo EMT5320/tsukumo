@@ -19,6 +19,7 @@ Thumbs.db
 *.local
 
 # Runtime data
+/.omo/
 /tsukumo.db
 /tsukumo.db-*
 /data/

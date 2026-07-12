@@ -1,11 +1,12 @@
 //! C1 public contract tests for durable event identities and envelopes.
 
 use tsukumo_kernel::{
-    validate_kernel_event, ArtifactId, CheckpointId, CorrelationId, EventContractError, EventId,
-    ExecutionId, KernelEvent, KernelEventPayload, OutcomeStatus, OwnerId, PermissionDecision,
-    PersistedJson, PersistedText, ProjectionId, QuestId, RuntimeBinding, RuntimeKind, RuntimeMode,
-    RuntimePhase, SensitiveText, SessionId, SpiritId, StateId, StateLifecycleAction, Timestamp,
-    VendorEventRef, WorkspaceId, KERNEL_EVENT_SCHEMA_VERSION,
+    redact_sensitive_text, validate_kernel_event, ArtifactId, CheckpointId, CorrelationId,
+    EventContractError, EventId, ExecutionId, KernelEvent, KernelEventPayload, OutcomeStatus,
+    OwnerId, PermissionDecision, PersistedJson, PersistedText, ProjectionId, QuestId,
+    RuntimeBinding, RuntimeKind, RuntimeMode, RuntimePhase, SensitiveText, SessionId, SpiritId,
+    StateId, StateLifecycleAction, Timestamp, VendorEventRef, WorkspaceId,
+    KERNEL_EVENT_SCHEMA_VERSION,
 };
 
 #[test]
@@ -69,6 +70,18 @@ fn sensitive_text_redacts_formatting_and_requires_explicit_exposure() {
     let json = PersistedJson::from_reviewed(serde_json::json!({"safe": "value"}));
     assert_eq!(format!("{persisted:?}"), "PersistedText([REDACTED])");
     assert_eq!(format!("{json:?}"), "PersistedJson([REDACTED])");
+}
+
+#[test]
+fn untrusted_text_when_terminal_format_characters_arrive_removes_them() {
+    // Given: visible text mixed with bidi, zero-width, control, and newline characters.
+    let untrusted = "left\u{202e}right\u{200b}\u{0007}\nnext";
+
+    // When: the shared persistence boundary sanitizes the text.
+    let sanitized = redact_sensitive_text(untrusted);
+
+    // Then: visible order is stable and the allowed newline becomes one space.
+    assert_eq!(sanitized, "leftright next");
 }
 
 #[test]

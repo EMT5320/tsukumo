@@ -1,0 +1,18 @@
+{
+  "frame_width": 4,
+  "frame_height": 4,
+  "frames": [
+    { "id": "idle_0", "rows": [".00.", "0110", "0220", ".00."] },
+    { "id": "work_0", "rows": [".00.", "0110", "2222", "0000"] },
+    { "id": "wait_0", "rows": [".22.", "0110", "0220", ".00."] },
+    { "id": "urgent_0", "rows": [".22.", "2112", "2222", "0000"] },
+    { "id": "celebrate_0", "rows": [".00.", "0110", "1221", ".00."] }
+  ],
+  "animations": [
+    { "pose": "idle", "frames": ["idle_0"], "frame_ticks": 1 },
+    { "pose": "work", "frames": ["work_0"], "frame_ticks": 1 },
+    { "pose": "wait", "frames": ["wait_0"], "frame_ticks": 1 },
+    { "pose": "urgent", "frames": ["urgent_0"], "frame_ticks": 1 },
+    { "pose": "celebrate", "frames": ["celebrate_0"], "frame_ticks": 1 }
+  ]
+}

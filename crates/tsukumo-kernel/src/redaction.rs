@@ -15,13 +15,15 @@ pub fn contains_sensitive_material(text: &str) -> bool {
         || contains_high_entropy_token(text)
 }
 
-/// Removes control characters and replaces secret-bearing text with one marker.
+/// Removes terminal-unsafe characters and replaces secret-bearing text with one marker.
 pub fn redact_sensitive_text(text: &str) -> String {
     let safe_controls = text
         .chars()
         .filter_map(|character| {
-            if character.is_control() {
-                matches!(character, '\n' | '\r' | '\t').then_some(' ')
+            if matches!(character, '\n' | '\r' | '\t') {
+                Some(' ')
+            } else if is_terminal_unsafe_character(character) {
+                None
             } else {
                 Some(character)
             }
@@ -34,6 +36,25 @@ pub fn redact_sensitive_text(text: &str) -> String {
     }
 }
 
+/// Returns true for controls or invisible directional format characters unsafe in terminals.
+pub fn is_terminal_unsafe_character(character: char) -> bool {
+    character.is_control() || is_terminal_format_character(character)
+}
+
+fn is_terminal_format_character(character: char) -> bool {
+    matches!(
+        character,
+        '\u{061c}'
+            | '\u{200b}'
+            | '\u{200c}'
+            | '\u{200d}'
+            | '\u{200e}'
+            | '\u{200f}'
+            | '\u{202a}'..='\u{202e}'
+            | '\u{2060}'..='\u{2069}'
+            | '\u{feff}'
+    )
+}
 /// Recursively redacts sensitive keys and bounds untrusted JSON collections.
 pub fn sanitize_untrusted_json(value: &Value) -> Value {
     sanitize_json_at_depth(value, 0)

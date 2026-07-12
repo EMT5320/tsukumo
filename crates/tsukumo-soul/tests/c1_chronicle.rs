@@ -233,3 +233,49 @@ fn sqlite_replay_revalidates_the_stored_event_contract() {
         ))
     ));
 }
+
+#[test]
+fn recent_replay_when_limited_returns_newest_tail_in_sequence_order() {
+    // Given: three Chronicle events appended in database order.
+    let directory = tempdir().expect("create recent replay directory");
+    let mut store = SoulStore::open(directory.path()).expect("open Chronicle");
+    for (index, id) in ["event-old", "event-middle", "event-new"]
+        .into_iter()
+        .enumerate()
+    {
+        store
+            .append_event(&event(id, 200 + index as i64, "quest-recent", id))
+            .expect("append recent replay fixture");
+    }
+
+    // When: the bounded newest tail requests two events.
+    let replayed = store
+        .replay_recent_events(2)
+        .expect("replay newest Chronicle tail");
+
+    // Then: the oldest event is excluded while consumer order remains chronological.
+    assert_eq!(
+        replayed
+            .iter()
+            .map(|item| item.event.event_id.as_str())
+            .collect::<Vec<_>>(),
+        ["event-middle", "event-new"]
+    );
+}
+#[test]
+fn recent_replay_when_zero_is_requested_returns_empty() {
+    // Given: one committed event in Chronicle.
+    let directory = tempdir().expect("create zero replay directory");
+    let mut store = SoulStore::open(directory.path()).expect("open Chronicle");
+    store
+        .append_event(&event("event-zero", 300, "quest-zero", "stored"))
+        .expect("append zero replay fixture");
+
+    // When: the caller explicitly requests a zero-sized UI tail.
+    let replayed = store
+        .replay_recent_events(0)
+        .expect("replay empty Chronicle tail");
+
+    // Then: the bounded read performs no implicit one-row expansion.
+    assert!(replayed.is_empty());
+}

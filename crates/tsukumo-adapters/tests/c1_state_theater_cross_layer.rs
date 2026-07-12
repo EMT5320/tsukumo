@@ -176,14 +176,17 @@ fn reopened_projection_and_chronicle_replay_share_one_evidence_chain() {
     drive_kernel_events(&mut world, &replay, &DirectorContext::default());
 
     assert_eq!(replay.len(), 4);
-    assert!(world
+    assert!(world.log.iter().any(|line| line
+        .text
+        .contains("state_lifecycle state-cross-gnu Created")));
+    assert!(world.log.iter().any(|line| {
+        line.text
+            .contains("projection_created projection-cross from checkpoint-cross")
+    }));
+    assert!(!world
         .log
         .iter()
-        .any(|line| line.contains("state_lifecycle state-cross-gnu Created")));
-    assert!(world.log.iter().any(|line| {
-        line.contains("projection_created projection-cross from checkpoint-cross")
-    }));
-    assert!(!world.log.iter().any(|line| line.contains(PROMPT_SECRET)));
+        .any(|line| line.text.contains(PROMPT_SECRET)));
 }
 
 /// Keeps the projection event causation edge explicit without retaining prompt data.

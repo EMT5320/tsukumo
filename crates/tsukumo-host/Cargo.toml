@@ -7,6 +7,9 @@ rust-version.workspace = true
 description = "Tsukumo composition root and owned runtime lifecycle"
 
 [dependencies]
+crossterm = { workspace = true }
+ratatui = { workspace = true }
+serde_json = { workspace = true }
 sha2 = { workspace = true }
 thiserror = { workspace = true }
 tsukumo-adapters = { workspace = true }
@@ -15,5 +18,7 @@ tsukumo-soul = { workspace = true }
 tsukumo-theater = { workspace = true }
 
 [dev-dependencies]
-serde_json = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled"] }
 tempfile = "3"
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Storage_FileSystem"] }

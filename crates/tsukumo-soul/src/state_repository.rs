@@ -195,6 +195,22 @@ pub(crate) fn list_states(
     conn: &Connection,
     active_at: Option<Timestamp>,
 ) -> Result<Vec<StateRecord>, SoulError> {
+    list_states_with_limit(conn, active_at, None)
+}
+
+pub(crate) fn list_states_limited(
+    conn: &Connection,
+    active_at: Option<Timestamp>,
+    limit: usize,
+) -> Result<Vec<StateRecord>, SoulError> {
+    list_states_with_limit(conn, active_at, Some(limit))
+}
+
+fn list_states_with_limit(
+    conn: &Connection,
+    active_at: Option<Timestamp>,
+    limit: Option<usize>,
+) -> Result<Vec<StateRecord>, SoulError> {
     let mut statement = conn.prepare(
         "SELECT state_id FROM state_records
          WHERE (?1 IS NULL OR (
@@ -202,10 +218,14 @@ pub(crate) fn list_states(
              AND (expires_at IS NULL OR expires_at > ?1)
              AND (deactivated_at IS NULL OR deactivated_at > ?1)
          ))
-         ORDER BY state_key ASC, version ASC",
+         ORDER BY state_key ASC, version ASC
+         LIMIT ?2",
     )?;
     let as_of = active_at.map(Timestamp::as_unix_millis);
-    let rows = statement.query_map([as_of], |row| row.get::<_, String>(0))?;
+    let row_limit = limit
+        .map(|value| i64::try_from(value).unwrap_or(i64::MAX))
+        .unwrap_or(i64::MAX);
+    let rows = statement.query_map(params![as_of, row_limit], |row| row.get::<_, String>(0))?;
     let mut states = Vec::new();
     for state_id in rows {
         let state_id = StateId::new(state_id?);

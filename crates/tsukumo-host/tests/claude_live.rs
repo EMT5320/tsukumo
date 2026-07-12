@@ -110,7 +110,7 @@ fn claude_owned_process_live_smoke_is_explicit_and_fail_closed() {
     assert!(world
         .log
         .back()
-        .is_some_and(|line| line.contains("outcome")));
+        .is_some_and(|line| line.text.contains("outcome")));
 }
 
 fn assert_reviewed_projection(prepared: &PreparedProjection) {

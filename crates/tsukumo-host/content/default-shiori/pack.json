@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "id": "default-shiori",
+  "display_name": "Midnight Ninety-Nine Workshop",
+  "world": {
+    "name": "深夜九十九工房",
+    "subtitle": "跨运行时冒险者公会"
+  },
+  "companion": {
+    "actor_id": "shiori",
+    "display_name": "栞",
+    "romanized_name": "Shiori",
+    "title": "九十九工房书记官",
+    "owner_address": "会长"
+  },
+  "terminology": {
+    "workshop": "工房",
+    "quest_board": "委托板",
+    "runtime_portal": "运行门",
+    "memory_cabinet": "记忆柜",
+    "projection_desk": "投影案",
+    "permission_station": "契约台"
+  },
+  "line_book": {
+    "tool_start": "正在登记执行事项。",
+    "tool_end_ok": "执行记录已归档。",
+    "tool_end_err": "执行记录出现异常。",
+    "waiting": "会长，这份契约需要裁定。",
+    "outcome": "委托已经结算。",
+    "error": "账目出现无法忽略的误差。"
+  },
+  "palette": {
+    "colors": [
+      {
+        "name": "ink",
+        "rgb": [
+          1,
+          6,
+          12
+        ],
+        "ansi256": 232,
+        "monochrome": "black"
+      },
+      {
+        "name": "surface",
+        "rgb": [
+          18,
+          24,
+          30
+        ],
+        "ansi256": 234,
+        "monochrome": "black"
+      },
+      {
+        "name": "wood_dark",
+        "rgb": [
+          45,
+          29,
+          21
+        ],
+        "ansi256": 52,
+        "monochrome": "dark_gray"
+      },
+      {
+        "name": "wood",
+        "rgb": [
+          101,
+          63,
+          34
+        ],
+        "ansi256": 94,
+        "monochrome": "gray"
+      },
+      {
+        "name": "indigo",
+        "rgb": [
+          31,
+          42,
+          65
+        ],
+        "ansi256": 17,
+        "monochrome": "dark_gray"
+      },
+      {
+        "name": "brass",
+        "rgb": [
+          155,
+          110,
+          73
+        ],
+        "ansi256": 137,
+        "monochrome": "gray"
+      },
+      {
+        "name": "parchment",
+        "rgb": [
+          217,
+          178,
+          143
+        ],
+        "ansi256": 180,
+        "monochrome": "white"
+      },
+      {
+        "name": "silver",
+        "rgb": [
+          175,
+          160,
+          162
+        ],
+        "ansi256": 145,
+        "monochrome": "gray"
+      },
+      {
+        "name": "spirit_cyan",
+        "rgb": [
+          68,
+          206,
+          222
+        ],
+        "ansi256": 80,
+        "monochrome": "white"
+      },
+      {
+        "name": "cyan_dark",
+        "rgb": [
+          7,
+          89,
+          111
+        ],
+        "ansi256": 24,
+        "monochrome": "dark_gray"
+      },
+      {
+        "name": "vermilion",
+        "rgb": [
+          140,
+          60,
+          43
+        ],
+        "ansi256": 130,
+        "monochrome": "white"
+      },
+      {
+        "name": "vermilion_dark",
+        "rgb": [
+          93,
+          32,
+          25
+        ],
+        "ansi256": 52,
+        "monochrome": "dark_gray"
+      },
+      {
+        "name": "text_primary",
+        "rgb": [
+          228,
+          207,
+          184
+        ],
+        "ansi256": 223,
+        "monochrome": "white"
+      },
+      {
+        "name": "text_muted",
+        "rgb": [
+          145,
+          142,
+          130
+        ],
+        "ansi256": 102,
+        "monochrome": "gray"
+      }
+    ],
+    "roles": {
+      "ink": 0,
+      "surface": 1,
+      "border": 5,
+      "text_primary": 12,
+      "text_muted": 13,
+      "accent": 8,
+      "urgent": 10
+    }
+  },
+  "assets": {
+    "scene": "scene.json",
+    "sprite": "sprites/shiori.json"
+  }
+}

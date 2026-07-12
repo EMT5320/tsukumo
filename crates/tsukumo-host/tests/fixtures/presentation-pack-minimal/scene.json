@@ -1,0 +1,20 @@
+{
+  "width": 8,
+  "height": 4,
+  "layers": [
+    {
+      "id": "workshop",
+      "x": 0,
+      "y": 0,
+      "rows": ["00000000", "01111110", "01222110", "00000000"]
+    }
+  ],
+  "facilities": [
+    { "id": "quest_board", "label": "任务板", "x": 0, "y": 1 },
+    { "id": "runtime_portal", "label": "信号门", "x": 4, "y": 1 },
+    { "id": "memory_cabinet", "label": "记录柜", "x": 7, "y": 1 },
+    { "id": "projection_desk", "label": "映射台", "x": 2, "y": 3 },
+    { "id": "permission_station", "label": "许可台", "x": 6, "y": 3 }
+  ],
+  "walk_bounds": { "min_x": 1, "max_x": 6, "y": 3 }
+}

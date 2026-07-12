@@ -94,7 +94,7 @@ fn fixture_events(payloads: Vec<KernelEventPayload>) -> Vec<KernelEvent> {
 fn stream_json_permission_raises_urgent() {
     // Given: the committed Claude fixture wrapped by a deterministic test host.
     let events = fixture_events(synthetic_demo_payloads().expect("decode synthetic fixture"));
-    let wait_index = events
+    let permission_index = events
         .iter()
         .position(|event| {
             matches!(
@@ -104,24 +104,23 @@ fn stream_json_permission_raises_urgent() {
         })
         .expect("fixture includes permission request");
     let mut world = StageWorld::new().with_log_cap(64);
-    world.ensure_placeholder("yuka");
+    world.ensure_placeholder(DirectorContext::default().actor_id);
 
     // When: theater replays through the permission request.
     drive_kernel_events(
         &mut world,
-        &events[..=wait_index],
+        &events[..=permission_index],
         &DirectorContext::default(),
     );
 
     // Then: the request is visibly blocking and traceable.
     assert_eq!(world.attention, AttentionTier::Urgent);
     let actor = world.primary().expect("primary actor");
-    assert_eq!(actor.pose, ActorPose::Wait);
+    assert_eq!(actor.pose, ActorPose::Upset);
     assert_eq!(actor.motion, Motion::Idle);
-    assert!(world
-        .log
-        .iter()
-        .any(|line| line.contains("permission_requested") && line.contains("perm_synth_1")));
+    assert!(world.log.iter().any(
+        |line| line.text.contains("permission_requested") && line.text.contains("perm_synth_1")
+    ));
 }
 
 #[test]
@@ -129,7 +128,7 @@ fn full_synthetic_quest_drives_stage_to_ambient() {
     // Given: normalized payloads with host-assigned envelope identity.
     let events = fixture_events(synthetic_demo_payloads().expect("decode synthetic fixture"));
     let mut world = StageWorld::new().with_log_cap(64);
-    world.ensure_placeholder("yuka");
+    world.ensure_placeholder(DirectorContext::default().actor_id);
 
     // When: theater replays the complete event sequence.
     drive_kernel_events(&mut world, &events, &DirectorContext::default());
@@ -196,7 +195,7 @@ fn fixture_host_envelopes_persist_and_reopen() {
         .map(|stored| stored.event.clone())
         .collect::<Vec<_>>();
     let mut world = StageWorld::new().with_log_cap(64);
-    world.ensure_placeholder("yuka");
+    world.ensure_placeholder(DirectorContext::default().actor_id);
     drive_kernel_events(&mut world, &replayed_events, &DirectorContext::default());
 
     // Then: the durable fixture path remains consumable by Theater after reopen.

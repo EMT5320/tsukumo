@@ -20,8 +20,8 @@ pub use identity::{
     RuntimeBinding, RuntimeKind, RuntimeMode, SessionId, SpiritId, StateId, WorkspaceId,
 };
 pub use redaction::{
-    contains_sensitive_material, contains_unredacted_sensitive_json, redact_sensitive_text,
-    sanitize_untrusted_json,
+    contains_sensitive_material, contains_unredacted_sensitive_json, is_terminal_unsafe_character,
+    redact_sensitive_text, sanitize_untrusted_json,
 };
 pub use session::{
     parse_jsonl_line, read_jsonl_events, read_jsonl_reader, EventDecodeError, SessionError,

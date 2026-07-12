@@ -24,11 +24,11 @@ fn fixture_replays_without_panic() {
         stage.iter().any(|e| matches!(
             e,
             StageEvent::ActorPose {
-                pose: ActorPose::Wait,
+                pose: ActorPose::Upset,
                 ..
             }
         )),
-        "waiting_permission should produce Wait pose"
+        "waiting_permission should produce an Upset pose"
     );
     assert!(
         stage.iter().any(|e| matches!(
@@ -65,13 +65,15 @@ fn fixture_replays_without_panic() {
 }
 
 #[test]
-fn fixture_preserves_spirit_id_on_poses() {
+fn fixture_preserves_source_spirit_id_on_poses() {
     let events = read_jsonl_events(fixture_path()).unwrap();
     let ctx = DirectorContext::default();
     let first = direct(&events[0], &ctx);
-    let pose = first.iter().find_map(|e| match e {
-        StageEvent::ActorPose { spirit_id, .. } => spirit_id.as_ref(),
-        _ => None,
+    let source = first.iter().find_map(|event| match event {
+        StageEvent::ActorPose { attribution, .. } => Some(&attribution.source_spirit_id),
+        StageEvent::Bubble { .. }
+        | StageEvent::LogLine { .. }
+        | StageEvent::AttentionTier { .. } => None,
     });
-    assert_eq!(pose.map(|id| id.as_str()), Some("gina"));
+    assert_eq!(source.map(|id| id.as_str()), Some("gina"));
 }

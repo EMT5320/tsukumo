@@ -100,6 +100,17 @@ fn source_event_state_and_lifecycle_commit_atomically_and_reopen() {
         .state(&state_id)
         .expect("query state")
         .expect("persisted state");
+    assert!(store
+        .list_active_states_limited(0)
+        .expect("query zero state limit")
+        .is_empty());
+    assert_eq!(
+        store
+            .list_active_states_limited(1)
+            .expect("query one state limit")
+            .len(),
+        1
+    );
 
     // Then: state content, evidence, version, and both Chronicle events survive.
     assert_eq!(

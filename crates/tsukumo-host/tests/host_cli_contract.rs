@@ -24,7 +24,17 @@ fn host_binary_exposes_stable_help_version_and_usage_errors() {
     let help_text = String::from_utf8(help.stdout).expect("help is UTF-8");
     assert!(help_text.contains("receipt-first runtime composition root"));
     assert!(help_text.contains("TSUKUMO_RUN_LIVE_SMOKE"));
+    assert!(help_text.contains("--presentation-pack <directory>"));
+    assert!(help_text.contains("--reduced-motion"));
 
+    let missing_pack = Command::new(binary)
+        .arg("--presentation-pack")
+        .output()
+        .expect("run missing presentation pack value");
+    assert_eq!(missing_pack.status.code(), Some(2));
+    assert!(String::from_utf8(missing_pack.stderr)
+        .expect("missing-value error is UTF-8")
+        .contains("missing value for --presentation-pack"));
     let invalid = Command::new(binary)
         .arg("--unknown")
         .output()

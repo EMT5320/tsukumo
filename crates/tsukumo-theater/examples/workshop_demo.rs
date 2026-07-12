@@ -26,7 +26,7 @@ fn main() {
 
     let ctx = DirectorContext::default();
     let mut world = StageWorld::new().with_log_cap(24);
-    world.ensure_placeholder("gina");
+    world.ensure_placeholder(ctx.actor_id.clone());
     drive_kernel_events(&mut world, &events, &ctx);
 
     for _ in 0..ticks {

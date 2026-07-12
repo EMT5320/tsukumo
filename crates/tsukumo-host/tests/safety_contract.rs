@@ -101,6 +101,31 @@ fn allow_session_covers_only_the_same_session_runtime_and_tool() {
 }
 
 #[test]
+fn reused_vendor_ref_across_executions_remains_independently_decidable() {
+    // Given: one vendor reuses a request ID in two host execution scopes.
+    let first = request("permission-reused", "session-a", "Read");
+    let mut second = first.clone();
+    second.scope.execution_id = ExecutionId::new("execution-second");
+    let vendor = first.vendor_request.clone();
+    let first_scope = first.scope.clone();
+    let second_scope = second.scope.clone();
+    let mut controller = PermissionController::default();
+    controller.register(first).expect("register first scope");
+    controller.register(second).expect("register second scope");
+
+    // When: each scoped request receives a separate explicit decision.
+    controller
+        .decide_scoped(&first_scope, &vendor, PermissionDecision::Deny)
+        .expect("decide first scope");
+    assert_eq!(controller.pending_count(), 1);
+    controller
+        .decide_scoped(&second_scope, &vendor, PermissionDecision::AllowOnce)
+        .expect("decide second scope");
+
+    // Then: vendor reuse never aliases authority across executions.
+    assert_eq!(controller.pending_count(), 0);
+}
+#[test]
 fn unwired_bridge_is_explicit_and_permission_decisions_do_not_create_state() {
     // Given: one denied request resolved by the deterministic controller.
     let request = request("permission-denied", "session-a", "Bash");

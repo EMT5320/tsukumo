@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "default-shiori",
+  "display_name": "Midnight Ninety-Nine Workshop",
+  "world": {
+    "name": "深夜九十九工房",
+    "subtitle": "跨运行时冒险者公会"
+  },
+  "companion": {
+    "actor_id": "shiori",
+    "display_name": "栞",
+    "romanized_name": "Shiori",
+    "title": "九十九工房书记官",
+    "owner_address": "会长"
+  },
+  "terminology": {
+    "workshop": "工房",
+    "quest_board": "委托板",
+    "runtime_portal": "运行门",
+    "memory_cabinet": "记忆柜",
+    "projection_desk": "投影案",
+    "permission_station": "契约台"
+  },
+  "line_book": {
+    "tool_start": "正在登记执行事项。",
+    "tool_end_ok": "执行记录已归档。",
+    "tool_end_err": "执行记录出现异常。",
+    "waiting": "会长，这份契约需要裁定。",
+    "outcome": "委托已经结算。",
+    "error": "账目出现无法忽略的误差。"
+  },
+  "palette": {
+    "colors": [
+      { "name": "ink", "rgb": [1, 6, 12], "ansi256": 232, "monochrome": "black" },
+      { "name": "parchment", "rgb": [217, 178, 143], "ansi256": 180, "monochrome": "white" },
+      { "name": "spirit_cyan", "rgb": [68, 206, 222], "ansi256": 80, "monochrome": "gray" }
+    ],
+    "roles": {
+      "ink": 0,
+      "surface": 0,
+      "border": 1,
+      "text_primary": 1,
+      "text_muted": 2,
+      "accent": 2,
+      "urgent": 1
+    }
+  },
+  "assets": {
+    "scene": "scene.json",
+    "sprite": "sprites/shiori.json"
+  }
+}

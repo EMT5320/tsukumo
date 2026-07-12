@@ -138,6 +138,46 @@ impl SoulStore {
         }
         Ok(events)
     }
+
+    /// Loads the newest bounded Chronicle tail in chronological order.
+    pub fn replay_recent_events(&self, limit: usize) -> Result<Vec<PersistedEvent>, SoulError> {
+        const MAX_RECENT_EVENTS: usize = 1_000;
+        const MAX_RECENT_BYTES: usize = 32 * 1024 * 1024;
+        if limit == 0 {
+            return Ok(Vec::new());
+        }
+        let limit = limit.min(MAX_RECENT_EVENTS);
+        let sql_limit = i64::try_from(limit).unwrap_or(i64::MAX);
+        let mut statement = self.conn.prepare(
+            "SELECT sequence, event_json
+             FROM chronicle_events
+             ORDER BY sequence DESC
+             LIMIT ?1",
+        )?;
+        let rows = statement.query_map([sql_limit], |row| {
+            Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+        })?;
+        let mut events = Vec::with_capacity(limit);
+        let mut retained_bytes = 0usize;
+        for row in rows {
+            let (sequence, event_json) = row?;
+            retained_bytes = retained_bytes.saturating_add(event_json.len());
+            if retained_bytes > MAX_RECENT_BYTES {
+                return Err(SoulError::ChronicleReadBudgetExceeded {
+                    event_count: events.len().saturating_add(1),
+                    byte_count: retained_bytes,
+                    maximum_events: limit,
+                    maximum_bytes: MAX_RECENT_BYTES,
+                });
+            }
+            events.push(PersistedEvent {
+                sequence,
+                event: decode_stored_event(&event_json)?,
+            });
+        }
+        events.reverse();
+        Ok(events)
+    }
 }
 
 pub(crate) fn append_event_in(
@@ -207,7 +247,7 @@ pub(crate) fn load_event_in(
         .transpose()
 }
 
-fn decode_stored_event(event_json: &str) -> Result<KernelEvent, SoulError> {
+pub(crate) fn decode_stored_event(event_json: &str) -> Result<KernelEvent, SoulError> {
     let event = serde_json::from_str::<KernelEvent>(event_json)?;
     validate_kernel_event(&event)?;
     Ok(event)

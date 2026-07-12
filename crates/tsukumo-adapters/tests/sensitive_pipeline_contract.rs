@@ -60,7 +60,12 @@ fn sentinel_never_reaches_chronicle_exports_or_theater_logs() {
     let mut world = StageWorld::new();
     drive_kernel_events(&mut world, &events, &DirectorContext::default());
     let snapshot = world.snapshot();
-    let theater_log = world.log.iter().cloned().collect::<Vec<_>>().join("\n");
+    let theater_log = world
+        .log
+        .iter()
+        .map(|line| line.text.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
 
     assert!(!chronicle.contains("SENTINEL"));
     assert!(chronicle.contains("[REDACTED]"));

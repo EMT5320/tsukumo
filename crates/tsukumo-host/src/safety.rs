@@ -120,36 +120,59 @@ pub enum PermissionRegistration {
     Covered(Box<PermissionResolution>),
 }
 
+/// Internal identity for one vendor request inside its host-owned execution scope.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct PermissionRequestKey {
+    scope: PermissionScope,
+    vendor_request: VendorEventRef,
+}
+
+impl PermissionRequestKey {
+    fn from_request(request: &PermissionRequest) -> Self {
+        Self {
+            scope: request.scope.clone(),
+            vendor_request: request.vendor_request.clone(),
+        }
+    }
+
+    fn new(scope: &PermissionScope, vendor_request: &VendorEventRef) -> Self {
+        Self {
+            scope: scope.clone(),
+            vendor_request: vendor_request.clone(),
+        }
+    }
+}
+
 /// Human-owned pending requests and explicit session grants.
 #[derive(Debug, Default)]
 pub struct PermissionController {
-    pending: HashMap<VendorEventRef, PermissionRequest>,
-    resolved: HashSet<VendorEventRef>,
+    pending: HashMap<PermissionRequestKey, PermissionRequest>,
+    resolved: HashSet<PermissionRequestKey>,
     session_grants: HashSet<SessionGrant>,
 }
 
 impl PermissionController {
-    /// Registers a request exactly once or applies a matching prior session grant.
+    /// Registers a request exactly once inside its scope or applies a session grant.
     pub fn register(
         &mut self,
         request: PermissionRequest,
     ) -> Result<PermissionRegistration, SafetyError> {
-        let reference = request.vendor_request.clone();
-        if self.resolved.contains(&reference) {
+        let key = PermissionRequestKey::from_request(&request);
+        if self.resolved.contains(&key) {
             return Err(SafetyError::StaleRequest {
-                vendor_request: reference,
+                vendor_request: request.vendor_request,
             });
         }
-        if self.pending.contains_key(&reference) {
+        if self.pending.contains_key(&key) {
             return Err(SafetyError::DuplicateRequest {
-                vendor_request: reference,
+                vendor_request: request.vendor_request,
             });
         }
         if self
             .session_grants
             .contains(&SessionGrant::from_request(&request))
         {
-            self.resolved.insert(reference);
+            self.resolved.insert(key);
             return Ok(PermissionRegistration::Covered(Box::new(
                 PermissionResolution {
                     request,
@@ -158,22 +181,24 @@ impl PermissionController {
                 },
             )));
         }
-        self.pending.insert(reference, request);
+        self.pending.insert(key, request);
         Ok(PermissionRegistration::Pending)
     }
 
-    /// Applies one human decision to a currently pending request.
-    pub fn decide(
+    /// Applies one human decision to a request identified by host scope and vendor ref.
+    pub fn decide_scoped(
         &mut self,
+        scope: &PermissionScope,
         vendor_request: &VendorEventRef,
         decision: PermissionDecision,
     ) -> Result<PermissionResolution, SafetyError> {
-        if self.resolved.contains(vendor_request) {
+        let key = PermissionRequestKey::new(scope, vendor_request);
+        if self.resolved.contains(&key) {
             return Err(SafetyError::StaleRequest {
                 vendor_request: vendor_request.clone(),
             });
         }
-        let Some(request) = self.pending.remove(vendor_request) else {
+        let Some(request) = self.pending.remove(&key) else {
             return Err(SafetyError::UnknownRequest {
                 vendor_request: vendor_request.clone(),
             });
@@ -182,7 +207,7 @@ impl PermissionController {
             self.session_grants
                 .insert(SessionGrant::from_request(&request));
         }
-        self.resolved.insert(vendor_request.clone());
+        self.resolved.insert(key);
         Ok(PermissionResolution {
             request,
             decision,
@@ -190,6 +215,37 @@ impl PermissionController {
         })
     }
 
+    /// Compatibility entrypoint for one globally unique pending vendor reference.
+    pub fn decide(
+        &mut self,
+        vendor_request: &VendorEventRef,
+        decision: PermissionDecision,
+    ) -> Result<PermissionResolution, SafetyError> {
+        let scopes = self
+            .pending
+            .keys()
+            .filter(|key| &key.vendor_request == vendor_request)
+            .map(|key| key.scope.clone())
+            .collect::<Vec<_>>();
+        match scopes.as_slice() {
+            [scope] => self.decide_scoped(scope, vendor_request, decision),
+            [] if self
+                .resolved
+                .iter()
+                .any(|key| &key.vendor_request == vendor_request) =>
+            {
+                Err(SafetyError::StaleRequest {
+                    vendor_request: vendor_request.clone(),
+                })
+            }
+            [] => Err(SafetyError::UnknownRequest {
+                vendor_request: vendor_request.clone(),
+            }),
+            _ => Err(SafetyError::AmbiguousRequest {
+                vendor_request: vendor_request.clone(),
+            }),
+        }
+    }
     /// Returns the number of requests still waiting for a human decision.
     pub fn pending_count(&self) -> usize {
         self.pending.len()
@@ -222,6 +278,8 @@ pub enum SafetyError {
     StaleRequest { vendor_request: VendorEventRef },
     #[error("permission request is unknown")]
     UnknownRequest { vendor_request: VendorEventRef },
+    #[error("permission request is ambiguous across execution scopes")]
+    AmbiguousRequest { vendor_request: VendorEventRef },
 }
 
 /// Vendor bridge application failure.

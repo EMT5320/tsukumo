@@ -104,7 +104,7 @@ fn main() {
     let _prompt = assemble_prompt("synthetic workshop quest", briefing.as_deref());
 
     let mut world = StageWorld::new().with_log_cap(24);
-    world.ensure_placeholder("yuka");
+    world.ensure_placeholder(DirectorContext::default().actor_id);
     drive_kernel_events(&mut world, &events[..end], &DirectorContext::default());
 
     let frame = render_frame_string(&world, DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
