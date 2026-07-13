@@ -9,6 +9,18 @@
 
 ## Ordered Checklist
 
+### 0. Codex Event-Surface Recon Spike (gate for step 1, added 2026-07-13)
+
+- [ ] Before writing any decoder, capture real version-pinned
+      `codex exec --json` event streams from throwaway prompts and map them
+      against the KernelEvent payload checklist (tool start/end granularity,
+      permission/approval mechanism, mid-turn input, outcome/error shapes).
+- [ ] Record semantic gaps versus the Claude mapping (`control_request`
+      equivalent, tool-call granularity, streaming text) and decide the
+      normalization strategy before implementing step 1.
+- [ ] Spike output is a short findings note in this task directory; no product
+      code changes.
+
 ### 1. Add Codex Runtime Support
 
 - [ ] Implement stdin-based `codex exec --json --ephemeral` profile with an
