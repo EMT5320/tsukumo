@@ -3,10 +3,8 @@
 //! Raw vendor keys stay in this module. Every returned value is bounded,
 //! redacted, and provider-neutral.
 
-mod fields;
-
 use super::DecodeError;
-use fields::{
+use crate::vendor_fields::{
     optional_bool, optional_string, optional_string_array, required_bool, required_label,
     required_string, reviewed_label, truncate,
 };

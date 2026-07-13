@@ -1,4 +1,4 @@
-//! Strict field decoders and bounded vendor labels.
+//! Shared strict field decoders and bounded vendor labels.
 
 use crate::stream_json::DecodeError;
 use serde_json::Value;
@@ -6,7 +6,7 @@ use tsukumo_kernel::{contains_sensitive_material, redact_sensitive_text};
 
 const MAX_VENDOR_LABEL_CHARS: usize = 128;
 
-pub(super) fn required_label(
+pub(crate) fn required_label(
     value: &Value,
     field: &'static str,
     event_type: &'static str,
@@ -15,7 +15,7 @@ pub(super) fn required_label(
     reviewed_label(value, event_type, field)
 }
 
-pub(super) fn reviewed_label(
+pub(crate) fn reviewed_label(
     value: &str,
     event_type: &'static str,
     field: &'static str,
@@ -30,7 +30,7 @@ pub(super) fn reviewed_label(
     Ok(truncate(&value, MAX_VENDOR_LABEL_CHARS))
 }
 
-pub(super) fn required_string<'a>(
+pub(crate) fn required_string<'a>(
     value: &'a Value,
     field: &'static str,
     event_type: &'static str,
@@ -42,7 +42,7 @@ pub(super) fn required_string<'a>(
         .ok_or_else(|| DecodeError::invalid(event_type, field))
 }
 
-pub(super) fn optional_string<'a>(
+pub(crate) fn optional_string<'a>(
     value: &'a Value,
     field: &'static str,
     event_type: &'static str,
@@ -57,7 +57,19 @@ pub(super) fn optional_string<'a>(
         .transpose()
 }
 
-pub(super) fn required_bool(
+pub(crate) fn required_i64(
+    value: &Value,
+    field: &'static str,
+    event_type: &'static str,
+) -> Result<i64, DecodeError> {
+    value
+        .get(field)
+        .ok_or_else(|| DecodeError::missing(event_type, field))?
+        .as_i64()
+        .ok_or_else(|| DecodeError::invalid(event_type, field))
+}
+
+pub(crate) fn required_bool(
     value: &Value,
     field: &'static str,
     event_type: &'static str,
@@ -69,7 +81,7 @@ pub(super) fn required_bool(
         .ok_or_else(|| DecodeError::invalid(event_type, field))
 }
 
-pub(super) fn optional_bool(
+pub(crate) fn optional_bool(
     value: &Value,
     field: &'static str,
     event_type: &'static str,
@@ -84,7 +96,7 @@ pub(super) fn optional_bool(
         .transpose()
 }
 
-pub(super) fn optional_string_array<'a>(
+pub(crate) fn optional_string_array<'a>(
     value: &'a Value,
     field: &'static str,
     event_type: &'static str,
@@ -104,7 +116,7 @@ pub(super) fn optional_string_array<'a>(
         .collect()
 }
 
-pub(super) fn truncate(text: &str, max_chars: usize) -> String {
+pub(crate) fn truncate(text: &str, max_chars: usize) -> String {
     if text.chars().count() <= max_chars {
         text.to_owned()
     } else {
@@ -112,6 +124,6 @@ pub(super) fn truncate(text: &str, max_chars: usize) -> String {
             .chars()
             .take(max_chars.saturating_sub(1))
             .collect::<String>();
-        format!("{prefix}…")
+        format!("{prefix}\u{2026}")
     }
 }

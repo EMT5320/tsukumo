@@ -10,7 +10,7 @@ use std::io::{BufRead, BufReader, ErrorKind, Read};
 use thiserror::Error;
 use tsukumo_kernel::{redact_sensitive_text, KernelEventPayload};
 
-const MAX_LINE_BYTES: usize = 1_048_576;
+pub(crate) const MAX_RUNTIME_LINE_BYTES: usize = 1_048_576;
 
 /// One-line Claude stream decoding failure.
 #[derive(Debug, Error)]
@@ -141,10 +141,10 @@ pub fn parse_stream_json_line(line: &str) -> Result<Vec<KernelEventPayload>, Dec
 }
 
 fn decode_runtime_line(line: &str) -> Result<ParsedRuntimeLine, DecodeError> {
-    if line.len() > MAX_LINE_BYTES {
+    if line.len() > MAX_RUNTIME_LINE_BYTES {
         return Err(DecodeError::LineTooLarge {
             bytes: line.len(),
-            maximum: MAX_LINE_BYTES,
+            maximum: MAX_RUNTIME_LINE_BYTES,
         });
     }
     let trimmed = line.trim();
@@ -219,12 +219,12 @@ pub fn parse_stream_json_reader<R: Read>(
         let newline = available.iter().position(|byte| *byte == b'\n');
         let consumed = newline.map_or(available.len(), |index| index + 1);
         let payload_bytes = newline.unwrap_or(available.len());
-        if line.len().saturating_add(payload_bytes) > MAX_LINE_BYTES {
+        if line.len().saturating_add(payload_bytes) > MAX_RUNTIME_LINE_BYTES {
             return Err(AdapterError::Decode {
                 line: line_no,
                 source: DecodeError::LineTooLarge {
                     bytes: line.len().saturating_add(payload_bytes),
-                    maximum: MAX_LINE_BYTES,
+                    maximum: MAX_RUNTIME_LINE_BYTES,
                 },
             });
         }

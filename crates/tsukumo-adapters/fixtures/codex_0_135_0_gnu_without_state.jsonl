@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"fixture-gnu-without-0-135-0"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_0","type":"command_execution","command":"\"C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe\" -Command 'cargo test --offline'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_0","type":"command_execution","command":"\"C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe\" -Command 'cargo test --offline'","aggregated_output":"`\"C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe\" -Command 'cargo test --offline'` rejected: blocked by policy","exit_code":-1,"status":"declined"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"fixture complete"}}
+{"type":"turn.completed","usage":{"input_tokens":21623,"cached_input_tokens":10240,"output_tokens":254,"reasoning_output_tokens":198}}

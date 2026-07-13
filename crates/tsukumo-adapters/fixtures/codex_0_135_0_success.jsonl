@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"fixture-thread-0-135-0"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_0","type":"command_execution","command":"powershell -NoProfile -Command Get-Location","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_0","type":"command_execution","command":"powershell -NoProfile -Command Get-Location","aggregated_output":"D:\\fixture\\repo\r\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"fixture complete"}}
+{"type":"turn.completed","usage":{"input_tokens":128,"cached_input_tokens":64,"output_tokens":16,"reasoning_output_tokens":0}}

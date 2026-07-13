@@ -85,6 +85,45 @@ pub fn prepared_fixture_with_goal(goal: &str) -> (TempDir, SoulStore, PreparedPr
     (directory, store, prepared)
 }
 
+pub fn prepared_dual_runtime_live_fixture(
+    goal: &str,
+) -> (TempDir, SoulStore, PreparedProjection, PreparedProjection) {
+    let (directory, mut store, claude) = prepared_fixture_with_goal(goal);
+    let runtime = RuntimeBinding::new(RuntimeKind::CodexCli, RuntimeMode::OwnedProcess);
+    let request = ProjectionRequest::new(
+        ProjectionTarget::new(
+            ProjectionId::new("projection-codex-live"),
+            ExecutionId::new("execution-codex-live"),
+            runtime.clone(),
+            claude.receipt.checkpoint_id.clone(),
+        ),
+        StateScope::workspace_os("tsukumo", OperatingSystem::Windows),
+        tsukumo_kernel::SensitiveText::new(goal),
+        Timestamp::from_unix_millis(103),
+        2_000,
+    );
+    let event = KernelEvent {
+        schema_version: KERNEL_EVENT_SCHEMA_VERSION,
+        event_id: EventId::new("event-codex-live-projection"),
+        occurred_at: request.created_at,
+        quest_id: QuestId::new("quest-host"),
+        session_id: SessionId::new("session-host"),
+        spirit_id: SpiritId::new("yuka"),
+        execution_id: Some(request.execution_id.clone()),
+        runtime: Some(runtime),
+        causation_id: None,
+        correlation_id: Some(CorrelationId::new("correlation-codex-live-projection")),
+        payload: KernelEventPayload::ProjectionCreated {
+            projection_id: request.projection_id.clone(),
+            checkpoint_id: request.checkpoint_id.clone(),
+        },
+    };
+    let codex = store
+        .prepare_projection(ProjectionWriteRequest::new(request, event))
+        .expect("prepare Codex live projection");
+    (directory, store, claude, codex)
+}
+
 fn base_event(id: &str, timestamp: i64, payload: KernelEventPayload) -> KernelEvent {
     KernelEvent {
         schema_version: KERNEL_EVENT_SCHEMA_VERSION,

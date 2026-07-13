@@ -7,7 +7,7 @@
 C1 starts continuity with the owner's first owned-process runtime and preserves the same port for the second:
 
 - Runtime A: Claude CLI own-process `stream-json`.
-- Planned Runtime B: Codex CLI non-interactive `codex exec --json`.
+- Runtime B: Codex CLI non-interactive `codex exec --json`.
 
 Both emit JSON Lines but use different vendor schemas. Tsukumo owns each child
 process, prompt projection, lifecycle, and normalization boundary. The reviewed
@@ -111,10 +111,10 @@ repository instructions/rules that are part of the task environment.
   an `Emitted`, `KnownIgnored`, or `UnknownSkipped` disposition.
 - Preserve vendor event/item IDs as namespaced provenance for tool start/end
   correlation.
-- Default C1 CI uses the committed, redacted Claude JSONL fixture. Add a Codex fixture with its future profile.
-- Live smoke is opt-in (`TSUKUMO_RUN_LIVE_SMOKE=1`) and requires the selected
-  CLI plus local authentication. C1 selects Claude only. If explicitly enabled, missing runtime or
-  authentication is a failure rather than a skip.
+- Default C1 CI uses committed, redacted Claude and versioned Codex JSONL fixtures.
+- Live smoke is opt-in (`TSUKUMO_RUN_LIVE_SMOKE=1`). The dual-runtime gate
+  requires both CLIs plus local authentication. If explicitly enabled, a missing
+  runtime or authentication failure is an error rather than a skip.
 - Live smoke runs in a controlled fixture repository with the least sandbox
   capable of the target action. Credentials and auth files never enter fixtures,
   Chronicle payloads, receipts, or test artifacts.
@@ -212,8 +212,9 @@ product claim honest without placing secrets or model nondeterminism in CI.
 
 Use this contract whenever tsukumo-host launches a receipt-committed Claude
 projection, records a permission decision, or changes owned-process limits.
-Codex support remains a later adapter profile; C1 ships one Claude
-owned-process profile plus recorded/fake verification.
+Claude and Codex now share the owned-process Host port. Each adapter keeps its
+own vendor command and stateful JSONL decoder while Host retains process, receipt,
+and durable event ownership.
 
 ### 2. Signatures
 
@@ -359,3 +360,142 @@ decoding; Soul remains the durable authority.
 For a live smoke, never use the repository working directory or the standard
 profile. Construct an allowlisted synthetic projection and run
 `ClaudeRuntimeProfile::isolated_smoke()` in an empty temporary directory.
+
+## Implemented C1 Codex Profile and Removed-State Evidence
+
+### 1. Scope / Trigger
+
+Use this contract when changing `CodexRuntimeProfile`, `CodexJsonDecoder`,
+Codex fixtures, the controlled Claude-to-Codex comparison, or the dual-runtime
+live gate. The reviewed schema version is `codex-cli 0.135.0`; future schema
+changes require a new fixture or an explicit compatibility decision.
+
+### 2. Signatures
+
+```rust
+impl CodexRuntimeProfile {
+    const fn read_only() -> Self;
+    const fn workspace_write() -> Self;
+    const fn isolated_smoke() -> Self;
+    fn version_command(&self, launch: &RuntimeLaunchConfig)
+        -> Result<RuntimeCommandSpec, RuntimeProfileError>;
+}
+
+impl RuntimeProfile for CodexRuntimeProfile {
+    fn binding(&self) -> RuntimeBinding; // codex_cli/owned_process
+    fn command(&self, launch: &RuntimeLaunchConfig)
+        -> Result<RuntimeCommandSpec, RuntimeProfileError>;
+    fn decoder(&self) -> Box<dyn RuntimeEventDecoder>;
+    fn safety_capability(&self) -> RuntimeSafetyCapability; // DenyUnapproved
+}
+
+struct CodexJsonDecoder {
+    thread_id: Option<String>,
+    turn_open: bool,
+    terminal_seen: bool,
+    pending_commands: HashSet<String>,
+}
+```
+
+Reference command shape:
+
+```text
+<prompt on stdin> | codex exec --json --ephemeral --color never   --sandbox read-only|workspace-write -c approval_policy="never" -
+```
+
+`isolated_smoke()` additionally uses `--ignore-user-config`,
+`--skip-git-repo-check`, disables apps, remote plugins, multi-agent, and
+memories, and disables web search. It runs from an empty temporary directory.
+
+### 3. Contracts
+
+- `read_only()` is the default. `workspace_write()` is an explicit capability
+  choice; no profile exposes `danger-full-access` or a dangerous bypass flag.
+- The final `-` is required so the rendered projection stays on stdin and out
+  of argv, environment variables, and process diagnostics.
+- On Windows, use a directly spawnable `codex.cmd` or native executable.
+  Forwarding the final `-` through `powershell -File codex.ps1` was not reliable
+  in the 0.135.0 recon.
+- Stdout is the JSONL protocol. Stderr remains diagnostic-only even when it
+  contains model-cache, plugin, skill, shell-snapshot, or analytics warnings.
+- `thread.started` stores the bounded thread ID; `turn.started` opens one turn.
+  Command item starts and completions must pair by item ID before a terminal
+  turn is accepted.
+- `command_execution` maps to namespaced `ToolStart`/`ToolEnd` payloads.
+  `completed` with exit zero is non-error; `failed`, `declined`, or non-zero
+  exit remains an explicit tool error. A later `turn.completed` may still close
+  the model turn successfully.
+- `agent_message`, reasoning, file-change, MCP, web-search, and plan items are
+  `KnownIgnored` until a versioned fixture supports a smaller honest payload.
+  Future item or top-level families are `UnknownSkipped`.
+- `turn.failed` emits a generic `Error` plus `Outcome(Failed)` without inventing
+  unobserved vendor details. Known malformed shapes, unpaired items, duplicate
+  terminals, and EOF without a terminal are typed failures.
+- Vendor refs use namespace `codex_cli` and `<thread_id>:<item_id>` correlation.
+  Host supplies durable EventId, execution, runtime, projection, and Chronicle
+  ordering.
+- The reviewed GNU pair contains policy-declined commands. It proves command
+  intent sensitivity only. A completed model turn does not upgrade the declined
+  Cargo action into task success.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+|---|---|
+| Missing/wrong-type thread or item field | line-scoped `DecodeError` |
+| Command completion without matching start | invalid item-ID sequence |
+| Command update without pending start | invalid item-ID sequence |
+| Unsupported command status | unsupported-known error |
+| Documented non-tool item | `KnownIgnored`, zero fabricated payloads |
+| Unknown future family | `UnknownSkipped`, zero fabricated payloads |
+| Second terminal turn | `AdapterError::DuplicateTerminal` |
+| EOF with open turn/pending command/no terminal | `AdapterError::TruncatedStream` |
+| JSONL line over 1 MiB | typed line-too-large error |
+| Prompt or secret reaches args/output fixture | privacy/fixture test failure |
+| Dual live gate enabled with missing CLI/auth | explicit test failure |
+
+### 5. Good / Base / Bad Cases
+
+- Good: receipt-committed projection -> stdin -> Codex owned process ->
+  incremental JSONL -> adapter payload -> Host attribution -> Chronicle ->
+  Theater/outcome.
+- Base: default CI replays the versioned success and GNU comparison fixtures;
+  no CLI credential or model call is required.
+- Bad: parse stderr as JSONL, treat a declined tool as successful, infer file or
+  MCP field layouts without a capture, persist raw prompts, or claim user value
+  from the removed-state pair.
+
+### 6. Tests Required
+
+- `codex_runtime_contract.rs`: command flags, stdin, sandbox selection, version
+  probe, fixture hygiene, and Claude/Codex normalized conformance.
+- `codex_decoder_contract.rs`: completed/failed/declined commands, item pairing,
+  known/unknown items, terminal failure, truncation, duplicate terminal, and
+  redaction.
+- `cross_runtime_comparison_contract.rs`: source -> state -> checkpoint ->
+  receipt -> Codex tool/outcome trace, receipt invariants, normalized command
+  difference, Host revoke, and historical receipt immutability.
+- `cross_runtime_live.rs`: ordinary allowlist test plus ignored, explicitly
+  gated dual-runtime version probes and owned-process executions.
+- Fixture scanning rejects user-home paths, temporary paths, auth material, and
+  secret sentinels before commit.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```text
+with-state prompt -> hard-coded "success" event
+without-state prompt -> hard-coded "success" event
+=> claim GNU state improved the task
+```
+
+#### Correct
+
+```text
+same checkpoint + same goal + one excluded StateId
+-> invariant-checked receipts
+-> reviewed real Codex JSONL command intents
+-> production decoder/Host/Chronicle replay
+-> report behavioral sensitivity and both policy declines
+```
