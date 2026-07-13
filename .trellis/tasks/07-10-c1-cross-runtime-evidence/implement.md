@@ -92,7 +92,7 @@ does not by itself prove task utility or the necessity of traceability.
 
 - [x] Run fixture secret/path scanning and prompt-sentinel tests.
 - [x] Run all adapter/host/soul integration and workspace gates.
-- [ ] Run an opt-in live smoke only when both local CLI prerequisites exist;
+- [x] Run an opt-in live smoke only when both local CLI prerequisites exist;
       enabled missing prerequisites must fail clearly.
 - [ ] Run `trellis-check`, record threshold outcomes and deviations, update
       executable specs only when contracts changed, commit, and archive.

@@ -92,7 +92,7 @@ or stop decision rather than an unbounded infrastructure project.
       receipt -> execution -> outcome/revoke chain as an engineering gate.
 - [x] Default tests require no CLI credentials and contain no secrets or
       personal paths.
-- [ ] Opt-in live smoke records both CLI versions and fails clearly when an
+- [x] Opt-in live smoke records both CLI versions and fails clearly when an
       explicitly enabled prerequisite is missing.
 
 ## Out of Scope
