@@ -2,16 +2,21 @@
 
 ## Start Rule
 
-Do not start this parent task for implementation. Contracts/Chronicle and
-Handoff/Projection are archived; the next code-owning child is:
+Do not start this parent task for implementation. Contracts/Chronicle,
+Handoff/Projection, Host/Runtime, and MVP TUI are archived; the next code-owning
+child is:
 
 ```powershell
-python ./.trellis/scripts/task.py start 07-10-c1-host-runtime
+python ./.trellis/scripts/task.py start 07-10-c1-cross-runtime-evidence
 ```
 
 Every child must be implemented, checked, committed, finished, and archived
 before the dependent child starts. At each boundary, review parent acceptance
 criteria and evidence-link compatibility.
+
+Full V0 release packaging waits for the 2026-07-23 GO/PIVOT/NO-GO gate. Minimal
+demo capture may happen during evidence freeze without activating the release
+child.
 
 ## Ordered Delivery
 
@@ -45,12 +50,12 @@ prompt secret.
 
 ### 3. Host and Claude Runtime
 
-- [ ] Add `tsukumo-host` composition root and process ports.
-- [ ] Refactor Claude decoder to incremental shared fixture/live operation.
-- [ ] Wire receipt -> stdin -> process -> payload -> envelope -> Chronicle ->
+- [x] Add `tsukumo-host` composition root and process ports.
+- [x] Refactor Claude decoder to incremental shared fixture/live operation.
+- [x] Wire receipt -> stdin -> process -> payload -> envelope -> Chronicle ->
       theater.
-- [ ] Implement lifecycle/reap and deterministic Safety Plane seams.
-- [ ] Pass fake-process, recorded fixture and opt-in Claude smoke gates; archive
+- [x] Implement lifecycle/reap and deterministic Safety Plane seams.
+- [x] Pass fake-process, recorded fixture and opt-in Claude smoke gates; archive
       child.
 
 Integration gate: the first Claude event is committed/rendered before process
@@ -58,18 +63,18 @@ exit, and every terminal/cancel/failure path reaps exactly once.
 
 ### 4. Cross-Runtime Evidence
 
-- [ ] Add Codex `exec --json` profile/decoder and shared conformance tests.
+- [x] Add Codex `exec --json` profile/decoder and shared conformance tests.
 - [ ] Run fixture-driven and opt-in real Claude -> Codex handoff.
-- [ ] Produce the controlled with-state/without-state comparison and post-revoke
+- [x] Produce the controlled with-state/without-state comparison and post-revoke
       projection without a persistent snapshot subsystem.
 - [ ] Archive the child after traceability, privacy, and claim-boundary checks.
 
 ### 5. MVP TUI
 
-- [ ] Add host read models and typed UI actions.
-- [ ] Add workshop status, state/projection inspectors, and permission modal.
-- [ ] Prove terminal restoration, resize, compact layout, and CJK alignment.
-- [ ] Archive the child after functional and visual checks.
+- [x] Add host read models and typed UI actions.
+- [x] Add workshop status, state/projection inspectors, and permission modal.
+- [x] Prove terminal restoration, resize, compact layout, and CJK alignment.
+- [x] Archive the child after functional and visual checks.
 
 ### 6. V0 Release Packaging
 
@@ -80,15 +85,15 @@ exit, and every terminal/cancel/failure path reaps exactly once.
 
 ## Parent Acceptance Review
 
-- [ ] Trace one positive run from source `EventId` through `StateId`,
+- [x] Trace one positive run from source `EventId` through `StateId`,
       `CheckpointId`, `ProjectionId`, `ExecutionId`, tool correlation and
       outcome.
-- [ ] Trace the removed-state pair and verify its invariant manifest.
-- [ ] Trace revoke/supersede and prove old receipts remain explainable while new
+- [x] Trace the removed-state pair and verify its invariant manifest.
+- [x] Trace revoke/supersede and prove old receipts remain explainable while new
       projections exclude inactive state.
-- [ ] Inspect Safety Plane evidence and prove approvals never enter automatic
+- [x] Inspect Safety Plane evidence and prove approvals never enter automatic
       relationship extraction.
-- [ ] Inspect committed comparison fixtures and run secret/path validation.
+- [x] Inspect committed comparison fixtures and run secret/path validation.
 - [ ] Run full quality gate from a clean checkout on the recorded toolchain.
 - [ ] Update specs for implementation learnings, commit, finish/archive parent,
       and record the developer journal.

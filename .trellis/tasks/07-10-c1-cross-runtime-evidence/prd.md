@@ -54,9 +54,13 @@ or stop decision rather than an unbounded infrastructure project.
   receipt, causal-chain, and selective-revoke controls.
 - Record natural handoff episodes separately from controlled stale, wrong-scope,
   and contradictory-state faults.
+- Preassign a 12-episode minimum across C0/C1/C2, with 20 as a stretch target,
+  while blocking or rotating by workload type where practical.
 - Measure first-correct-action time, owner interventions, stale-state errors,
   context-reading tokens, task quality, bad-state diagnosis/recovery time,
   collateral revokes, recurrence, and always-on overhead.
+- Freeze operational metric definitions before observing outcomes and keep
+  manual measurement work within 20 minutes per day.
 - Freeze evidence on 2026-07-22 and make a GO/PIVOT/NO-GO decision on
   2026-07-23. Treat thresholds as an n=1 product gate, not a statistical claim.
 - Keep authenticated dual-runtime smoke explicit and opt-in; missing enabled
@@ -64,13 +68,13 @@ or stop decision rather than an unbounded infrastructure project.
 
 ## Acceptance Criteria
 
-- [ ] One SpiritId and checkpoint continue across Claude and Codex
+- [x] One SpiritId and checkpoint continue across Claude and Codex
       RuntimeBindings.
-- [ ] Claude and Codex fixtures normalize equivalent tool/outcome semantics.
-- [ ] With-state and without-state inputs match except target state selection
+- [x] Claude and Codex fixtures normalize equivalent tool/outcome semantics.
+- [x] With-state and without-state inputs match except target state selection
       and dependent hashes, and normalized tool arguments visibly differ.
-- [ ] Receipt/tool/outcome refs trace to the source user EventId.
-- [ ] Post-revoke projection excludes the old StateRef and preserves the old
+- [x] Receipt/tool/outcome refs trace to the source user EventId.
+- [x] Post-revoke projection excludes the old StateRef and preserves the old
       receipt for explanation.
 - [ ] C1 vs C0 is measured on predeclared continuation metrics, and either
       first-correct-action time improves by about 30% or owner interventions by
@@ -80,9 +84,13 @@ or stop decision rather than an unbounded infrastructure project.
       deletion/recurrence visibly falls before claiming traceability value.
 - [ ] Normal-operation latency, token, storage, and cognitive overhead are
       recorded; injected faults are never used as evidence of natural incidence.
-- [ ] Designed trace cases preserve a complete source -> state -> checkpoint ->
+- [ ] At least 12 episodes are preassigned across the three conditions, or any
+      deadline shortfall is recorded without changing thresholds after results.
+- [ ] Manual observation work remains within 20 minutes per day, and unavailable
+      token measurements are marked unavailable rather than estimated.
+- [x] Designed trace cases preserve a complete source -> state -> checkpoint ->
       receipt -> execution -> outcome/revoke chain as an engineering gate.
-- [ ] Default tests require no CLI credentials and contain no secrets or
+- [x] Default tests require no CLI credentials and contain no secrets or
       personal paths.
 - [ ] Opt-in live smoke records both CLI versions and fails clearly when an
       explicitly enabled prerequisite is missing.

@@ -4,6 +4,8 @@
 
 - [ ] All functional children are archived and committed.
 - [ ] The product binary and TUI pass their local quality and visual gates.
+- [ ] The 2026-07-23 trusted-handoff gate selected GO, or the owner approved a
+      narrower packaging target for the selected PIVOT.
 
 ## Ordered Checklist
 

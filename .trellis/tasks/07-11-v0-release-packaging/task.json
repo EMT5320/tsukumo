@@ -7,7 +7,7 @@
   "dev_type": null,
   "scope": null,
   "package": null,
-  "priority": "P0",
+  "priority": "P2",
   "creator": "EMT5320",
   "assignee": "EMT5320",
   "createdAt": "2026-07-11",
@@ -21,6 +21,6 @@
   "children": [],
   "parent": "07-10-c1-handoff-continuity",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Deferred until the 2026-07-23 trusted-handoff GO/PIVOT/NO-GO gate; minimal evidence-freeze demo capture stays upstream.",
   "meta": {}
 }

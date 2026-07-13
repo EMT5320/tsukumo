@@ -3,7 +3,7 @@
   "name": "c1-cross-runtime-evidence",
   "title": "C1 Cross-Runtime Evidence",
   "description": "完成 Codex runtime，并以 Trellis 强基线验证可信交接、追溯与撤销的续接/恢复效用",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

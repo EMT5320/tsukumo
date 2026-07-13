@@ -4,11 +4,16 @@
 
 - Parent: `.trellis/tasks/07-10-c1-handoff-continuity`
 - Depends on all functional C1/V0 children.
+- Activation gate: the 2026-07-23 trusted-handoff decision must select GO, or
+  the owner must explicitly approve a packaging scope for a PIVOT result.
 
 ## Goal
 
 Package the validated Tsukumo vertical slice as an installable, documented, and
 reproducible `v0.1.0` release candidate suitable for real owner testing.
+
+This work starts after the trusted-handoff decision. Evidence-freeze demo
+capture does not activate the full packaging task.
 
 ## User Value
 
