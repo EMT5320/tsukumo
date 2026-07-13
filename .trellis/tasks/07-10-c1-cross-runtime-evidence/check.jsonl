@@ -1,1 +1,9 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "DESIGN.md", "reason": "Check implementation and claims against the corrected product boundary and 2026-07-23 decision gate"}
+{"file": ".trellis/tasks/07-10-c1-cross-runtime-evidence/research/trellis-baseline-and-utility-evaluation.md", "reason": "Audit C0/C1/C2 separation, natural-vs-injected reporting, thresholds, and protocol deviations"}
+{"file": ".trellis/spec/rust/architecture-and-boundaries.md", "reason": "Review dependency direction and side-effect ownership"}
+{"file": ".trellis/spec/rust/types-and-event-contracts.md", "reason": "Review attribution, schema validation, redaction, and replay invariants"}
+{"file": ".trellis/spec/rust/runtime-adapters.md", "reason": "Review Codex/Claude conformance, decoder failure semantics, process privacy, and opt-in live evidence"}
+{"file": ".trellis/spec/rust/state-and-persistence.md", "reason": "Review evidence links, receipt-before-launch, historical immutability, selection, and revoke behavior"}
+{"file": ".trellis/spec/rust/error-handling.md", "reason": "Review typed propagation and evidence-write failure handling"}
+{"file": ".trellis/spec/rust/quality-and-testing.md", "reason": "Run required quality gates and semantic-negative regression lanes"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Review end-to-end data ownership from runtime line through user-visible evidence"}

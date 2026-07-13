@@ -3,9 +3,35 @@
 ## Scope
 
 This child adds the Codex runtime profile/decoder and produces the controlled
-cross-runtime evidence required before UI work. It reuses host lifecycle,
-checkpoint selection, and production receipts. It does not add presentation or
+cross-runtime evidence required before the 2026-07-23 productization decision.
+It reuses host lifecycle, checkpoint selection, and production receipts. The UI
+already exists in a separate task; this child does not change presentation or
 release infrastructure.
+
+The product question is narrower than the implementation surface: does
+evidence-backed state transfer reduce the cost of continuing and correcting
+real work compared with the existing Trellis workflow? Trace completeness is a
+required invariant, not the user-value result.
+
+## Evaluation Boundary and Baselines
+
+The evaluation uses three conditions defined in
+`research/trellis-baseline-and-utility-evaluation.md`:
+
+| Condition | Runtime handoff | Provenance/revoke controls | Isolates |
+|---|---|---|---|
+| C0 Trellis-only | Owner + repository artifacts | None from Tsukumo | Current strongest practical baseline |
+| C1 migration | Automatic checkpoint/StateRef projection | Hidden from user | Migration value over C0 |
+| C2 migration + evidence | Same automatic projection | Source, scope, receipt, outcome, selective revoke | Recovery value over C1 |
+
+Natural dogfood and controlled faults are reported separately. Controlled
+wrong-scope, stale, and contradictory-state cases prove recovery capability;
+only naturally observed incidence can support an always-on expected-value
+claim. The unit of analysis is one handoff episode, not token volume.
+
+Evaluation observations remain reviewed task artifacts or temporary data. They
+do not create a new production evaluation store, retain raw prompts, or become
+a second source of truth.
 
 ## Codex Runtime Profile
 
@@ -64,17 +90,29 @@ cleanup audit is introduced in V0.
 
 ## Claim Boundary
 
-- A normal run may state that the GNU StateRef was selected/projected and a GNU
-  tool call followed.
-- The paired run may state that removing the state changed observed tool
-  arguments under the recorded controls.
-- The result does not generalize across every model, task, or configuration.
+Claims follow an explicit ladder:
+
+1. A complete source/state/checkpoint/receipt/execution/outcome chain proves
+   structural integrity only.
+2. A paired removed-state run with changed tool arguments proves behavioral
+   sensitivity under the recorded controls only.
+3. C1 may claim migration utility only if continuation cost improves against C0
+   without lower task quality.
+4. C2 may claim traceability/revoke utility only if diagnosis or recovery
+   improves against C1 or collateral deletion/recurrence visibly falls.
+5. Always-on product value additionally requires naturally observed incident
+   frequency to outweigh normal latency, token, storage, and cognitive cost.
+
+No result generalizes across every user, model, task, or configuration. This is
+an n=1 product decision gate, not a significance test.
 
 ## Post-Revoke Flow
 
 Host applies a user-evidenced revoke transition, compiles the next checkpoint,
 and prepares a new projection. The new receipt excludes the StateRef; the old
-receipt and Chronicle chain remain immutable and queryable.
+receipt and Chronicle chain remain immutable and queryable. Recovery evidence
+also records time to identify the StateRef, time to the next correct action,
+collateral revokes, and whether the bad state recurs at the next handoff.
 
 ## Tests
 
@@ -84,10 +122,17 @@ receipt and Chronicle chain remain immutable and queryable.
   trace.
 - With/without invariant and normalized argument comparison.
 - Post-revoke selection with historical receipt inspection.
+- C0/C1 continuation observation with the same task-quality gate.
+- C1/C2 stale, wrong-scope, and contradictory-state recovery observations.
+- Normal-operation latency/token/storage/cognitive overhead accounting.
 - Fixture secret/path validation and receipt prompt-sentinel regression.
 - Opt-in live dual-runtime smoke using the same host/decoder code.
 
 ## Rollback
 
 Codex support and fixtures are additive. A failed live run remains diagnostic
-evidence and cannot replace deterministic fixtures automatically.
+evidence and cannot replace deterministic fixtures automatically. If C1 does
+not beat C0, stop expanding the heavy runtime/TUI path. If C1 succeeds but C2
+does not, retain a slim automatic handoff and remove full traceability from the
+product claim. If only C2 recovery succeeds, pivot to an on-demand evidence
+sidecar.

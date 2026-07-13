@@ -1,1 +1,9 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "DESIGN.md", "reason": "Project north star plus 2026-07-13 Trellis/Loomstead utility-gate correction"}
+{"file": ".trellis/tasks/07-10-c1-cross-runtime-evidence/research/trellis-baseline-and-utility-evaluation.md", "reason": "Frozen C0/C1/C2 protocol, metrics, thresholds, timeline, and claim boundaries"}
+{"file": ".trellis/spec/rust/architecture-and-boundaries.md", "reason": "Keep adapters, host, soul, theater, and optional product surfaces within crate ownership"}
+{"file": ".trellis/spec/rust/types-and-event-contracts.md", "reason": "Preserve durable attribution and normalized event contracts across both runtimes"}
+{"file": ".trellis/spec/rust/runtime-adapters.md", "reason": "Own Codex event-surface recon, decoder, process, privacy, and live-smoke contracts"}
+{"file": ".trellis/spec/rust/state-and-persistence.md", "reason": "Preserve StateRef, checkpoint, receipt, historical selection, and revoke invariants"}
+{"file": ".trellis/spec/rust/error-handling.md", "reason": "Keep malformed vendor, evidence, process, and persistence failures typed and fail-closed"}
+{"file": ".trellis/spec/rust/quality-and-testing.md", "reason": "Apply workspace gates, fixture discipline, and cross-layer regression coverage"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Verify state survives runtime decode, host attribution, Chronicle, projection, and outcome boundaries"}

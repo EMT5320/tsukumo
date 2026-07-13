@@ -291,5 +291,48 @@ Implemented the stage-first pixel TUI, modular presentation packs, durable Host 
 ### Next Steps
 
 - 启动 `07-10-c1-cross-runtime-evidence`，从 step 0 Codex 侦察 spike 开工。
-- **时间盒：2026-07-26 前三个活跃任务全关 + 热交接 demo 可录屏**（DESIGN §16 V0 验收纪律）。
+- ~~时间盒：2026-07-26 前三个活跃任务全关 + 热交接 demo 可录屏。~~ 本轮原决议，已由 Session 9 的 2026-07-23 效用门取代。
 - live smoke 每周至少手动跑一次并记录 CLI 版本。
+
+
+## Session 9: Trellis 强基线与 Loomstead 效用门复核
+
+**Date**: 2026-07-13
+**Task**: `07-10-c1-cross-runtime-evidence` 产品 / 研究协议纠偏
+**Branch**: `main`
+
+### Summary
+
+在主人提出“重型 Tsukumo 是否仍有护城河”与“如何证明 trace 有用”后，复核 Trellis 实际能力及 Loomstead 研究档案。结论收窄为：**验证性 GO 至 2026-07-23，当前无已证明护城河；P0 保留可信交接，并以续接 / 恢复成本而非链路完整性作结果变量。**
+
+### Main Changes
+
+- **Trellis 强基线**：承认 context injection、channel runtime、共享任务制品和主人调度已经覆盖跨工具协调的大部分价值；“事务捕获 / 拥有会话 / per-person / 聚合层”均从结构性壁垒降为待测能力。
+- **Loomstead 负面先验**：复核 `human_rating_pilot_gate.md`、`process_fidelity_eval_spec.md` 与 research transition audit；明确“证据完整 → 行为敏感 → 任务效用 → 恢复效用 → 净期望价值”证据阶梯。
+- **根本差异**：Loomstead 研究受控 runtime 内的动作来源；Tsukumo 验证用户状态跨独立 Claude / Codex runtime 后是否降低真实续接、纠错和恢复成本。系统边界与因变量构成差异，Rust / TUI 不构成研究差异。
+- **三条件协议**：C0 Trellis-only、C1 自动迁移但隐藏追溯、C2 自动迁移 + provenance / selective revoke；加入 stale、wrong-scope、contradiction 故障与自然发生率分离报告。
+- **决策门**：7/22 冻结，7/23 GO / PIVOT / NO-GO；迁移门约为首次正确动作改善 30% 或人工干预减少 50%，恢复门约为定位 / 恢复改善 50%，正常开销预算约 5–10%。这些是 n=1 产品门，不是统计结论。
+- **产品形态解冻**：Trellis 作为声明 / 协作层，Tsukumo 作为 evidence sidecar，TUI 作为可选控制与作品集展示面；权限闭环、陪伴和养成扩展降为 P2。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| (this commit) | `docs: define trusted-handoff utility gate` |
+
+### Testing
+
+- [OK] 交叉核对 Loomstead 三份原始研究材料与 Tsukumo 当前任务制品。
+- [OK] Trellis task context validation 与 `git diff --check`（提交前执行）。
+- [OK] 纯文档 / 协议变更；无产品代码与测试契约变更。
+
+### Status
+
+[OK] **Completed — validation protocol frozen through 2026-07-23**
+
+### Next Steps
+
+- 7/14 前冻结 C0/C1/C2 观察模板，并种下一个 48–72 小时延迟恢复任务。
+- 完成 Codex event-surface recon，再实现 decoder；不得先按 Claude 事件形状猜接口。
+- 7/17–7/21 记录 12–20 个 handoff episode；不足时如实报告，不用 token 总量替代样本。
+- 7/22 形成正向与否证两套作品集叙事，7/23 按数据作最终决策。
