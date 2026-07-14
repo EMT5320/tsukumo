@@ -31,7 +31,7 @@ fn failed_and_declined_commands_remain_explicit_tool_errors() {
             .decode_line(r#"{"type":"turn.completed","usage":{}}"#)
             .expect("decode terminal turn");
 
-        // Then: command failure remains visible without fabricating turn failure.
+        // Then: command failure remains visible and cannot become task success.
         assert!(matches!(
             tool_end.payloads.as_slice(),
             [KernelEventPayload::ToolEnd { is_error: true, .. }]
@@ -39,12 +39,53 @@ fn failed_and_declined_commands_remain_explicit_tool_errors() {
         assert!(matches!(
             terminal.payloads.as_slice(),
             [KernelEventPayload::Outcome {
-                status: OutcomeStatus::Succeeded,
+                status: OutcomeStatus::Failed,
+                summary: Some(summary),
                 ..
-            }]
+            }] if summary.as_str() == "Codex turn completed with tool errors"
         ));
-        decoder.finish().expect("negative command turn completes");
+        decoder.finish().expect("negative command turn is terminal");
     }
+}
+
+#[test]
+fn later_success_does_not_erase_an_earlier_tool_error() {
+    // Given: one failed command followed by a successful fallback in the same turn.
+    let mut decoder = CodexJsonDecoder::new();
+    decode(
+        &mut decoder,
+        r#"{"type":"thread.started","thread_id":"thread-mixed"}"#,
+    );
+    decode(&mut decoder, r#"{"type":"turn.started"}"#);
+    for (item, status, exit_code) in [("failed", "failed", 1), ("fallback", "completed", 0)] {
+        decode(
+            &mut decoder,
+            &format!(
+                r#"{{"type":"item.started","item":{{"id":"{item}","type":"command_execution","command":"{item}","aggregated_output":"","exit_code":null,"status":"in_progress"}}}}"#
+            ),
+        );
+        decode(
+            &mut decoder,
+            &format!(
+                r#"{{"type":"item.completed","item":{{"id":"{item}","type":"command_execution","command":"{item}","aggregated_output":"done","exit_code":{exit_code},"status":"{status}"}}}}"#
+            ),
+        );
+    }
+
+    // When: Codex reports that the enclosing model turn completed normally.
+    let terminal = decoder
+        .decode_line(r#"{"type":"turn.completed","usage":{}}"#)
+        .expect("decode mixed terminal turn");
+
+    // Then: the normalized task outcome remains failed for owner review.
+    assert!(matches!(
+        terminal.payloads.as_slice(),
+        [KernelEventPayload::Outcome {
+            status: OutcomeStatus::Failed,
+            ..
+        }]
+    ));
+    decoder.finish().expect("mixed command turn is terminal");
 }
 
 #[test]

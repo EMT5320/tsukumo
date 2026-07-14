@@ -8,6 +8,7 @@ description = "Tsukumo composition root and owned runtime lifecycle"
 
 [dependencies]
 crossterm = { workspace = true }
+serde = { workspace = true }
 ratatui = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

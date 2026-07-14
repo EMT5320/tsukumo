@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "capture_set_id": "codex-0.135.0-gnu-removed-state-2026-07-13",
+  "capture_date": "2026-07-13",
+  "runtime": {
+    "kind": "codex_cli",
+    "version": "0.135.0",
+    "profile": "workspace_write",
+    "sandbox": "workspace-write",
+    "approval_policy": "never",
+    "model": null,
+    "model_config_digest": null,
+    "user_config_digest": null
+  },
+  "repository_fixture": {
+    "id": "cross_runtime_rust",
+    "sha256": "5ba04cd5db4a7f8cf02537fe2ce940740dda78c5ab60507758d79f80f5a6b578"
+  },
+  "runs": {
+    "with_state": {
+      "fixture_path": "codex_0_135_0_gnu_with_state.jsonl",
+      "fixture_sha256": "c54f9ec7fb395134b907ed874764e89f82a447034dfa8fe54fadc9af859ad567",
+      "replay_projection_sha256": "bd8e886baa51d50f6535432cefd350cdf89ba7111d64b1dcc04ab640aa5ae184",
+      "selected_state_ids": [
+        "state-cross-runtime-gnu"
+      ],
+      "capture_prompt_sha256": null
+    },
+    "without_state": {
+      "fixture_path": "codex_0_135_0_gnu_without_state.jsonl",
+      "fixture_sha256": "dd05664296fd5c58b7e381f8e216cb6de8edf05d91f2cdb07d2df363c93e55d2",
+      "replay_projection_sha256": "b8d4d330f1089c89755e71b880c30dd20cb9e5b1d4275567db3148bb04ed8b66",
+      "selected_state_ids": [],
+      "capture_prompt_sha256": null
+    }
+  },
+  "claim": {
+    "level": "paired_capture_replay_difference",
+    "causal_claim_eligible": false,
+    "reason": "exact capture model, model configuration, user configuration, and prompt digests were not retained"
+  }
+}

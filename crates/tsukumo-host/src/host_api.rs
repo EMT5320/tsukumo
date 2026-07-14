@@ -9,6 +9,7 @@ use std::sync::Arc;
 use tsukumo_adapters::{
     RuntimeEventDecoder, RuntimeLaunchConfig, RuntimeProfile, RuntimeSafetyCapability,
 };
+use tsukumo_kernel::Timestamp;
 use tsukumo_soul::PreparedProjection;
 use tsukumo_theater::{DirectorContext, StageWorld};
 
@@ -82,12 +83,29 @@ pub(crate) struct RunningResources {
     pub(crate) safety_capability: RuntimeSafetyCapability,
     pub(crate) process_tree: ProcessTreeCapability,
 }
+/// Inclusive wall-clock bounds applied to the durable Starting event.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExecutionStartWindow {
+    pub(crate) not_before: Timestamp,
+    pub(crate) not_after: Timestamp,
+}
+
+impl ExecutionStartWindow {
+    pub const fn new(not_before: Timestamp, not_after: Timestamp) -> Self {
+        Self {
+            not_before,
+            not_after,
+        }
+    }
+}
+
 /// Receipt-committed input and its runtime/envelope coordinates.
 pub struct ExecutionRequest<'a> {
     pub(crate) prepared: &'a PreparedProjection,
     pub(crate) runtime: RuntimeSelection<'a>,
     pub(crate) context: ExecutionContext,
     pub(crate) cancellation: CancellationToken,
+    pub(crate) start_window: Option<ExecutionStartWindow>,
 }
 
 impl<'a> ExecutionRequest<'a> {
@@ -102,12 +120,19 @@ impl<'a> ExecutionRequest<'a> {
             runtime,
             context,
             cancellation: CancellationToken::default(),
+            start_window: None,
         }
     }
 
     /// Supplies a cancellation token shared with the caller.
     pub fn with_cancellation(mut self, cancellation: CancellationToken) -> Self {
         self.cancellation = cancellation;
+        self
+    }
+
+    /// Requires the durable Starting event to fall within an inclusive window.
+    pub fn with_start_window(mut self, start_window: ExecutionStartWindow) -> Self {
+        self.start_window = Some(start_window);
         self
     }
 }

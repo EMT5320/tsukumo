@@ -110,6 +110,8 @@ pub struct HandoffCheckpoint {
     pub open_loop_transitions: Vec<OpenLoopTransition>,
     pub next_actions: Vec<NextAction>,
     pub source_event_refs: Vec<EventId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub registration_digest: Option<String>,
     pub created_at: Timestamp,
     pub trigger: CheckpointTrigger,
 }
@@ -138,6 +140,7 @@ impl HandoffCheckpoint {
             open_loop_transitions: Vec::new(),
             next_actions: Vec::new(),
             source_event_refs: Vec::new(),
+            registration_digest: None,
             created_at,
             trigger,
         }
@@ -180,6 +183,12 @@ impl HandoffCheckpoint {
 
     pub fn with_source_event_refs(mut self, refs: Vec<EventId>) -> Self {
         self.source_event_refs = refs;
+        self
+    }
+
+    /// Attaches a non-rendered digest that freezes reviewed registration metadata.
+    pub fn with_registration_digest(mut self, registration_digest: String) -> Self {
+        self.registration_digest = Some(registration_digest);
         self
     }
 }

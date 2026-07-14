@@ -16,8 +16,9 @@ pub use briefing::{
 };
 pub use claude::{claude_c1_success_fixture, ClaudeRuntimeProfile, ClaudeSafetyMode};
 pub use codex::{
-    codex_0_135_0_gnu_with_state_fixture, codex_0_135_0_gnu_without_state_fixture,
-    codex_0_135_0_success_fixture, CodexRuntimeProfile, CodexSandboxMode,
+    codex_0_135_0_gnu_capture_manifest, codex_0_135_0_gnu_with_state_fixture,
+    codex_0_135_0_gnu_without_state_fixture, codex_0_135_0_success_fixture, CodexRuntimeProfile,
+    CodexSandboxMode,
 };
 pub use codex_json::CodexJsonDecoder;
 pub use runtime::{

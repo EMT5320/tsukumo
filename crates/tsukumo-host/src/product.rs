@@ -14,7 +14,7 @@ use tsukumo_theater::{
     UiPermissionId, ValidatedPresentationPack, ViewModelError,
 };
 
-use crate::local_path::LocalDirectoryGuard;
+use crate::local_path::{prepare_data_directory, LocalDirectoryGuard};
 use crate::{ClockError, HostError, PermissionController, SafetyError, SystemClock};
 
 const NOTICE_CAP: usize = 8;
@@ -59,19 +59,7 @@ impl HostProductController {
         pack: &ValidatedPresentationPack,
     ) -> Result<Self, ProductControllerError> {
         let bounds = pack.scene().walk_bounds;
-        let mut data_guard = LocalDirectoryGuard::prepare(data_dir.as_ref())
-            .map_err(|error| ProductControllerError::LocalPath(error.to_string()))?;
-        data_guard
-            .validate_tree()
-            .map_err(|error| ProductControllerError::LocalPath(error.to_string()))?;
-        data_guard
-            .ensure_directory(Path::new("skills"))
-            .and_then(|()| data_guard.ensure_guarded_file(Path::new("soul.db"), b""))
-            .and_then(|()| data_guard.ensure_guarded_file(Path::new("soul.db-journal"), b""))
-            .and_then(|()| data_guard.ensure_guarded_file(Path::new("soul.db-wal"), b""))
-            .and_then(|()| data_guard.ensure_guarded_file(Path::new("soul.db-shm"), b""))
-            .and_then(|()| data_guard.ensure_guarded_file(Path::new("MEMORY.md"), b"# MEMORY\n\n"))
-            .and_then(|()| data_guard.ensure_guarded_file(Path::new("USER.md"), b"# USER\n\n"))
+        let data_guard = prepare_data_directory(data_dir.as_ref())
             .map_err(|error| ProductControllerError::LocalPath(error.to_string()))?;
         let data_dir = data_guard.root().to_path_buf();
         Ok(Self {

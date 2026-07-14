@@ -5,17 +5,28 @@ use std::io::{self, Write};
 use std::process::ExitCode;
 use thiserror::Error;
 use tsukumo_host::{
-    load_presentation_pack, parse_host_args, run_tui, HostCliError, HostCommand,
-    HostProductController, PresentationPackLoadError, ProductController, ProductControllerError,
-    TuiError,
+    load_presentation_pack, parse_host_args, read_episode_spec, resume_episode, run_tui,
+    seed_episode, EpisodeCommand, EpisodeError, HostCliError, HostCommand, HostProductController,
+    PresentationPackLoadError, ProductController, ProductControllerError, TuiError,
 };
 
 const HELP: &str = "tsukumo-host - receipt-first runtime composition root / workshop
 
 USAGE:
     tsukumo-host [--presentation-pack <directory>] [--reduced-motion]
+    tsukumo-host episode seed --spec <reviewed.json> --data-dir <directory>
+    tsukumo-host episode resume --spec <reviewed.json> --data-dir <directory>
+        --runtime-executable <path> --working-dir <directory> --confirm-live-run
+        [--workspace-write]
     tsukumo-host --help
     tsukumo-host --version
+
+EPISODES:
+    seed    Commit one reviewed source summary and immutable checkpoint
+    resume  Commit a projection receipt, then launch the reviewed target runtime
+    C0      Remains a manual Trellis-only baseline and never launches here
+    C1      Migrates state while evidence controls stay hidden
+    C2      Migrates the same state and exposes receipt/provenance metadata
 
 OPTIONS:
     --presentation-pack <directory>  Load one inert, versioned presentation pack
@@ -74,11 +85,32 @@ fn run(args: impl IntoIterator<Item = OsString>) -> Result<(), CliError> {
             run_tui(&pack, &mut controller, snapshot, options.reduced_motion)?;
             Ok(())
         }
+        HostCommand::Episode(EpisodeCommand::Seed(options)) => {
+            let spec = read_episode_spec(options.spec)?;
+            let summary = seed_episode(&spec, options.data_dir)?;
+            write_json(&summary)
+        }
+        HostCommand::Episode(EpisodeCommand::Resume(options)) => {
+            let spec = read_episode_spec(options.spec)?;
+            let summary = resume_episode(
+                &spec,
+                options.data_dir,
+                options.runtime_executable,
+                options.working_dir,
+                options.workspace_write_acknowledged,
+                options.live_run_confirmed,
+            )?;
+            write_json(&summary)
+        }
     }
 }
 
 fn write_stdout(value: &str) -> Result<(), CliError> {
     writeln!(io::stdout().lock(), "{value}").map_err(CliError::Output)
+}
+
+fn write_json(value: &impl serde::Serialize) -> Result<(), CliError> {
+    write_stdout(&serde_json::to_string_pretty(value)?)
 }
 
 #[derive(Debug, Error)]
@@ -91,6 +123,10 @@ enum CliError {
     Product(#[from] ProductControllerError),
     #[error(transparent)]
     Terminal(#[from] TuiError),
+    #[error(transparent)]
+    Episode(#[from] EpisodeError),
+    #[error("failed to serialize command output: {0}")]
+    Json(#[from] serde_json::Error),
     #[error("failed to write output: {0}")]
     Output(io::Error),
 }

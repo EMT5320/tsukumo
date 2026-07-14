@@ -6,10 +6,11 @@ use common::{
     materialize_cross_runtime_repository, prepare_post_revoke_projection,
     prepared_cross_runtime_comparison, CrossRuntimePrepared, FakeRunner, FixedClock, TestLedger,
 };
+use sha2::{Digest, Sha256};
 use std::path::Path;
 use tsukumo_adapters::{
-    codex_0_135_0_gnu_with_state_fixture, codex_0_135_0_gnu_without_state_fixture,
-    CodexRuntimeProfile, RuntimeLaunchConfig,
+    codex_0_135_0_gnu_capture_manifest, codex_0_135_0_gnu_with_state_fixture,
+    codex_0_135_0_gnu_without_state_fixture, CodexRuntimeProfile, RuntimeLaunchConfig,
 };
 use tsukumo_host::{
     load_presentation_pack, ExecutionContext, ExecutionPolicy, ExecutionReport, ExecutionRequest,
@@ -22,12 +23,18 @@ use tsukumo_kernel::{
 use tsukumo_soul::{
     PreparedProjection, ProjectionOmissionReason, ProjectionSection, SoulStore, StateStatus,
 };
-use tsukumo_theater::{DirectorContext, StageWorld, UiAction};
+use tsukumo_theater::{
+    ActorPose, AttentionTier, DirectorContext, ExecutionPhase, RuntimeHealth, StageWorld, UiAction,
+};
 
 struct CaseEvidence {
     report: ExecutionReport,
     events: Vec<KernelEvent>,
     captured_prompt: String,
+    theater_pose: ActorPose,
+    theater_attention: AttentionTier,
+    product_phase: ExecutionPhase,
+    runtime_health: RuntimeHealth,
 }
 
 #[test]
@@ -37,6 +44,9 @@ fn comparison_replays_real_codex_commands_under_one_removed_state() {
     let (repository, repository_digest) = materialize_cross_runtime_repository();
     assert_source_and_projection_bindings(&prepared);
     assert_eq!(repository_digest.len(), 64);
+    let capture_manifest = serde_json::from_str(codex_0_135_0_gnu_capture_manifest())
+        .expect("parse reviewed Codex capture manifest");
+    assert_capture_manifest(&capture_manifest, &prepared, &repository_digest);
     for relative in ["Cargo.toml", "src/lib.rs"] {
         assert!(repository.path().join(relative).is_file());
     }
@@ -64,8 +74,13 @@ fn comparison_replays_real_codex_commands_under_one_removed_state() {
     assert!(!without_state
         .captured_prompt
         .contains("state-cross-runtime-gnu"));
-    assert_eq!(with_state.report.status, OutcomeStatus::Succeeded);
-    assert_eq!(without_state.report.status, OutcomeStatus::Succeeded);
+    for evidence in [&with_state, &without_state] {
+        assert_eq!(evidence.report.status, OutcomeStatus::Failed);
+        assert_eq!(evidence.theater_pose, ActorPose::Upset);
+        assert_eq!(evidence.theater_attention, AttentionTier::Urgent);
+        assert_eq!(evidence.product_phase, ExecutionPhase::Failed);
+        assert_eq!(evidence.runtime_health, RuntimeHealth::Degraded);
+    }
 
     // Then: only the target state and dependent receipt hashes differ before execution.
     assert_eq!(
@@ -106,13 +121,10 @@ fn comparison_replays_real_codex_commands_under_one_removed_state() {
     assert!(tool_error_flags(&without_state.events)
         .iter()
         .all(|value| *value));
-    assert_eq!(
-        terminal_outcome(&with_state.events),
-        OutcomeStatus::Succeeded
-    );
+    assert_eq!(terminal_outcome(&with_state.events), OutcomeStatus::Failed);
     assert_eq!(
         terminal_outcome(&without_state.events),
-        OutcomeStatus::Succeeded
+        OutcomeStatus::Failed
     );
 
     // Then: the bounded manifest records facts and contains no rendered prompt snapshot.
@@ -139,7 +151,9 @@ fn comparison_replays_real_codex_commands_under_one_removed_state() {
             "tool_errors": tool_error_flags(&without_state.events),
             "outcome": terminal_outcome(&without_state.events),
         },
-        "claim_boundary": "controlled behavioral sensitivity only",
+        "capture_set_id": required_manifest_str(&capture_manifest, "/capture_set_id"),
+        "claim_boundary": required_manifest_str(&capture_manifest, "/claim/level"),
+        "causal_claim_eligible": false,
     });
     let serialized = serde_json::to_string_pretty(&manifest).expect("serialize evidence manifest");
     assert!(!serialized.contains("rendered_prompt"));
@@ -351,14 +365,28 @@ fn execute_case(
         ))
         .expect("replay reviewed Codex comparison fixture")
     };
+    let theater_pose = world.primary().expect("Theater has a runtime actor").pose;
+    let theater_attention = world.attention;
     let events = ledger.execution_events(&prepared.receipt.execution_id);
     let captured_prompt = runner
         .captured_prompt()
         .expect("Host writes prompt to stdin");
+    drop(ledger);
+    let pack = load_presentation_pack(&PresentationPackSource::EmbeddedDefault)
+        .expect("load embedded presentation pack");
+    let mut controller = HostProductController::open(store_directory, &pack)
+        .expect("open product read model after comparison execution");
+    let product = controller
+        .refresh()
+        .expect("refresh product read model after comparison execution");
     CaseEvidence {
         report,
         events,
         captured_prompt,
+        theater_pose,
+        theater_attention,
+        product_phase: product.view.execution.phase,
+        runtime_health: product.view.runtime.health,
     }
 }
 
@@ -399,6 +427,125 @@ fn tool_error_flags(events: &[KernelEvent]) -> Vec<bool> {
             _ => None,
         })
         .collect()
+}
+
+fn assert_capture_manifest(
+    manifest: &serde_json::Value,
+    prepared: &CrossRuntimePrepared,
+    repository_digest: &str,
+) {
+    assert_eq!(
+        manifest
+            .pointer("/schema_version")
+            .and_then(serde_json::Value::as_u64),
+        Some(1)
+    );
+    assert_eq!(
+        required_manifest_str(manifest, "/runtime/kind"),
+        "codex_cli"
+    );
+    assert_eq!(
+        required_manifest_str(manifest, "/runtime/version"),
+        "0.135.0"
+    );
+    assert_eq!(
+        required_manifest_str(manifest, "/runtime/profile"),
+        "workspace_write"
+    );
+    assert_eq!(
+        required_manifest_str(manifest, "/runtime/sandbox"),
+        "workspace-write"
+    );
+    assert_eq!(
+        required_manifest_str(manifest, "/runtime/approval_policy"),
+        "never"
+    );
+    for unavailable in [
+        "/runtime/model",
+        "/runtime/model_config_digest",
+        "/runtime/user_config_digest",
+        "/runs/with_state/capture_prompt_sha256",
+        "/runs/without_state/capture_prompt_sha256",
+    ] {
+        assert!(
+            manifest
+                .pointer(unavailable)
+                .is_some_and(serde_json::Value::is_null),
+            "{unavailable} must remain explicitly unavailable"
+        );
+    }
+    assert_eq!(
+        required_manifest_str(manifest, "/repository_fixture/sha256"),
+        repository_digest
+    );
+    assert_manifest_run(
+        manifest,
+        "with_state",
+        codex_0_135_0_gnu_with_state_fixture(),
+        &prepared.with_state,
+        &["state-cross-runtime-gnu"],
+    );
+    assert_manifest_run(
+        manifest,
+        "without_state",
+        codex_0_135_0_gnu_without_state_fixture(),
+        &prepared.without_state,
+        &[],
+    );
+    assert_eq!(
+        manifest
+            .pointer("/claim/causal_claim_eligible")
+            .and_then(serde_json::Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        required_manifest_str(manifest, "/claim/level"),
+        "paired_capture_replay_difference"
+    );
+    let serialized = serde_json::to_string(manifest).expect("serialize capture manifest");
+    assert!(!serialized.contains("Run the appropriate offline test command"));
+    assert!(!serialized.contains("# Tsukumo handoff"));
+    assert!(!serialized.contains("auth.json"));
+}
+
+fn assert_manifest_run(
+    manifest: &serde_json::Value,
+    condition: &str,
+    fixture: &str,
+    projection: &PreparedProjection,
+    selected_state_ids: &[&str],
+) {
+    let base = format!("/runs/{condition}");
+    assert_eq!(
+        required_manifest_str(manifest, &format!("{base}/fixture_sha256")),
+        sha256(fixture)
+    );
+    assert_eq!(
+        required_manifest_str(manifest, &format!("{base}/replay_projection_sha256")),
+        projection.receipt.rendered_digest.value
+    );
+    let selected = manifest
+        .pointer(&format!("{base}/selected_state_ids"))
+        .and_then(serde_json::Value::as_array)
+        .expect("capture manifest selected_state_ids array");
+    assert_eq!(
+        selected
+            .iter()
+            .map(|value| value.as_str().expect("selected state id is a string"))
+            .collect::<Vec<_>>(),
+        selected_state_ids
+    );
+}
+
+fn required_manifest_str<'a>(manifest: &'a serde_json::Value, pointer: &str) -> &'a str {
+    manifest
+        .pointer(pointer)
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or_else(|| panic!("capture manifest requires string at {pointer}"))
+}
+
+fn sha256(value: &str) -> String {
+    format!("{:x}", Sha256::digest(value.as_bytes()))
 }
 
 fn terminal_outcome(events: &[KernelEvent]) -> OutcomeStatus {

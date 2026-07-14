@@ -6,11 +6,16 @@ use crate::runtime::{
     RuntimeProfileError, RuntimeSafetyCapability,
 };
 use std::ffi::OsString;
-use tsukumo_kernel::{RuntimeBinding, RuntimeKind, RuntimeMode};
+use tsukumo_kernel::{is_terminal_unsafe_character, RuntimeBinding, RuntimeKind, RuntimeMode};
 
 /// Returns the reviewed Codex 0.135.0 fixture consumed by the production decoder.
 pub const fn codex_0_135_0_success_fixture() -> &'static str {
     include_str!("../fixtures/codex_0_135_0_success.jsonl")
+}
+
+/// Returns the reviewed GNU capture metadata and explicit claim boundary.
+pub const fn codex_0_135_0_gnu_capture_manifest() -> &'static str {
+    include_str!("../fixtures/codex_0_135_0_gnu_capture_manifest.json")
 }
 
 /// Returns the reviewed GNU with-state Codex 0.135.0 capture.
@@ -101,6 +106,17 @@ impl RuntimeProfile for CodexRuntimeProfile {
         RuntimeBinding::new(RuntimeKind::CodexCli, RuntimeMode::OwnedProcess)
     }
 
+    fn version_command(
+        &self,
+        launch: &RuntimeLaunchConfig,
+    ) -> Result<RuntimeCommandSpec, RuntimeProfileError> {
+        CodexRuntimeProfile::version_command(self, launch)
+    }
+
+    fn parse_version_lines(&self, lines: &[String]) -> Result<String, RuntimeProfileError> {
+        parse_codex_version(lines)
+    }
+
     fn command(
         &self,
         launch: &RuntimeLaunchConfig,
@@ -148,5 +164,23 @@ impl RuntimeProfile for CodexRuntimeProfile {
 
     fn safety_capability(&self) -> RuntimeSafetyCapability {
         RuntimeSafetyCapability::DenyUnapproved
+    }
+}
+
+fn parse_codex_version(lines: &[String]) -> Result<String, RuntimeProfileError> {
+    if lines
+        .iter()
+        .any(|line| line.chars().any(is_terminal_unsafe_character))
+    {
+        return Err(RuntimeProfileError::InvalidVersionOutput);
+    }
+    let versions = lines
+        .iter()
+        .filter_map(|line| line.trim().strip_prefix("codex-cli "))
+        .filter(|version| !version.is_empty() && version.chars().count() <= 256)
+        .collect::<Vec<_>>();
+    match versions.as_slice() {
+        [version] => Ok((*version).to_owned()),
+        _ => Err(RuntimeProfileError::InvalidVersionOutput),
     }
 }

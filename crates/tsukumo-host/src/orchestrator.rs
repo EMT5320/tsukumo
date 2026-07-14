@@ -11,7 +11,7 @@ use crate::safety::PermissionResolution;
 use crate::session::RunningExecution;
 use tsukumo_kernel::{
     ExecutionId, KernelEvent, KernelEventPayload, OutcomeStatus, PersistedText, RuntimeBinding,
-    RuntimePhase,
+    RuntimePhase, Timestamp,
 };
 use tsukumo_soul::{AppendOutcome, PreparedProjection, ProjectionReceipt, SoulError};
 use tsukumo_theater::drive_kernel_event;
@@ -49,7 +49,7 @@ impl<'a> RuntimeOrchestrator<'a> {
             process_tree: self.services.runner.process_tree_capability(),
         };
         let mut builder = EventBuilder::new(request.context, &request.prepared.receipt);
-        self.commit_starting(&mut builder, &execution_id)?;
+        let started_at = self.commit_starting(&mut builder, &execution_id, request.start_window)?;
 
         let launch = ProcessLaunch::new(
             command,
@@ -59,7 +59,12 @@ impl<'a> RuntimeOrchestrator<'a> {
         let mut handle = match self.services.runner.spawn(launch) {
             Ok(handle) => handle,
             Err(error) => {
-                return self.report_launch_failure(&mut builder, error, resources.process_tree)
+                return self.report_launch_failure(
+                    &mut builder,
+                    error,
+                    resources.process_tree,
+                    started_at,
+                )
             }
         };
         if let Err(error) = self.commit_started(&mut builder) {
@@ -67,7 +72,7 @@ impl<'a> RuntimeOrchestrator<'a> {
             return Err(error.with_cleanup(cleanup));
         }
 
-        RunningExecution::new(self, builder, handle, resources).run()
+        RunningExecution::new(self, builder, handle, resources, started_at).run()
     }
     /// Persists one controller-owned human decision after its request evidence exists.
     pub fn record_permission_resolution(
@@ -104,18 +109,31 @@ impl<'a> RuntimeOrchestrator<'a> {
         &mut self,
         builder: &mut EventBuilder,
         execution_id: &ExecutionId,
-    ) -> Result<(), HostError> {
+        start_window: Option<crate::ExecutionStartWindow>,
+    ) -> Result<Timestamp, HostError> {
         let event = self.build_event(
             builder,
             KernelEventPayload::RuntimeLifecycle {
                 phase: RuntimePhase::Starting,
             },
         )?;
+        if let Some(window) = start_window {
+            if event.occurred_at < window.not_before {
+                return Err(HostError::ExecutionStartTooEarly {
+                    not_before_unix_ms: window.not_before.as_unix_millis(),
+                });
+            }
+            if event.occurred_at > window.not_after {
+                return Err(HostError::ExecutionStartWindowClosed {
+                    not_after_unix_ms: window.not_after.as_unix_millis(),
+                });
+            }
+        }
         match self
             .commit_event(&event)
             .map_err(HostError::ChronicleBeforeSpawn)?
         {
-            AppendOutcome::Inserted { .. } => Ok(()),
+            AppendOutcome::Inserted { .. } => Ok(event.occurred_at),
             AppendOutcome::Duplicate { .. } => Err(HostError::AlreadyExecuted {
                 execution_id: execution_id.clone(),
             }),
@@ -192,6 +210,7 @@ impl<'a> RuntimeOrchestrator<'a> {
         builder: &mut EventBuilder,
         error: crate::process::ProcessError,
         process_tree: ProcessTreeCapability,
+        started_at: Timestamp,
     ) -> Result<ExecutionReport, HostError> {
         for payload in [
             KernelEventPayload::RuntimeLifecycle {
@@ -208,6 +227,7 @@ impl<'a> RuntimeOrchestrator<'a> {
                 .map_err(HostError::ChronicleBeforeSpawn)?;
         }
         Ok(ExecutionReport {
+            started_at,
             status: OutcomeStatus::LaunchFailed,
             process_tree,
             failure: Some(ExecutionFailure::LaunchFailed),
