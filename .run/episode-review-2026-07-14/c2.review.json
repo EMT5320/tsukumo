@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "episode_id": "episode-2026-07-14-delayed-resumption",
+  "condition": "c2",
+  "episode_type": "natural_delayed_resumption",
+  "workload_block": "delayed_resumption_claim_audit",
+  "fault": "none",
+  "quest_id": "quest-2026-07-14-delayed-resumption",
+  "source_session_id": "source-2026-07-14-codex-coord",
+  "target_session_id": "target-2026-07-14-claude-resume",
+  "spirit_id": "yuka",
+  "source_runtime": {
+    "kind": "codex_cli",
+    "version": "0.135.0",
+    "execution_profile": "codex_workspace_write"
+  },
+  "target_runtime": {
+    "kind": "claude_cli",
+    "version": "2.1.205",
+    "execution_profile": "claude_deny_unapproved"
+  },
+  "source_summary": "On 2026-07-14 a Codex CLI coordinating session delegated Cursor CLI root README productization, reviewed daytime episode hardening commits 8616e5f and f5f88ad, and completed five episode_runner_contract classes covering C0 resume, live confirmation, two workspace-write rejection paths, and Claude target; the targeted episode_runner_contract suite reported 17 passed. Uncommitted README.md and episode_runner_contract.rs changes remain in the working tree and are not published or merged. One open loop remains: start a real 48-72h C1/C2 delayed episode and compare against an external Trellis-only C0 baseline, then record time to first correct action, intervention count, and result quality after resume.",
+  "explicit_state_input": "Working-tree README.md and episode_runner_contract.rs edits are unfinished local evidence and must not be described as published or merged.",
+  "checkpoint": {
+    "goal": "Evaluate 48-72h Codex-to-Claude delayed resumption under C1 and C2, and compare against an external Trellis-only C0 strong baseline",
+    "progress": [
+      {
+        "summary": "Delegated Cursor CLI root README productization in the coordinating session",
+        "status": "completed"
+      },
+      {
+        "summary": "Reviewed daytime episode hardening commits 8616e5f and f5f88ad",
+        "status": "completed"
+      },
+      {
+        "summary": "Completed five episode_runner_contract classes; the targeted episode_runner_contract suite reported 17 passed",
+        "status": "completed"
+      }
+    ],
+    "decisions": [
+      {
+        "summary": "Target runtime is Claude CLI to keep a Codex-to-Claude cross-runtime delayed pair"
+      },
+      {
+        "summary": "Delay window is 48-72 hours measured from the eventual committed seed timestamp"
+      },
+      {
+        "summary": "Uncommitted README.md and episode_runner_contract.rs must stay out of published-or-merged claims"
+      }
+    ],
+    "artifacts": [
+      {
+        "artifact_id": "readme-working-tree",
+        "location": "README.md"
+      },
+      {
+        "artifact_id": "episode-runner-contract-working-tree",
+        "location": "crates/tsukumo-host/tests/episode_runner_contract.rs"
+      }
+    ],
+    "open_loops": [
+      {
+        "id": "open-loop-c1-c2-delayed-baseline",
+        "summary": "Start the real 48-72h C1/C2 delayed episode and compare against the external Trellis-only C0 baseline; after resume record time to first correct action, intervention count, and result quality"
+      }
+    ],
+    "next_actions": [
+      {
+        "summary": "After teacher approval, seed equivalent C1 and C2 specs into separate data directories"
+      },
+      {
+        "summary": "After the delay window opens, resume the Claude target and record the declared continuation metrics"
+      }
+    ],
+    "constraint_state_ids": []
+  },
+  "projection": {
+    "scope": {
+      "subject": { "type": "workspace", "workspace_id": "tsukumo" },
+      "applicability": {
+        "workspace": "tsukumo",
+        "operating_system": "windows",
+        "task_tags": ["rust_build", "rust_test"],
+        "language_tags": ["rust"]
+      }
+    },
+    "budget_chars": 8000,
+    "delegation_goal": "Resume the reviewed delayed Codex-to-Claude baseline after the delay window and continue only the declared open loop without treating uncommitted working-tree edits as published"
+  },
+  "delay": {
+    "minimum_hours": 48,
+    "maximum_hours": 72
+  },
+  "quality_gate": [
+    "Use only retained reproducible local evidence from the 2026-07-14 coordinating session",
+    "Do not describe uncommitted README.md or episode_runner_contract.rs as published or merged",
+    "After resume record time to first correct action, intervention count, and result quality",
+    "Compare outcomes against the external Trellis-only C0 baseline without inventing missing baseline numbers"
+  ]
+}
