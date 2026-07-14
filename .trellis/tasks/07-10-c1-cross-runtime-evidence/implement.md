@@ -72,8 +72,28 @@ does not by itself prove task utility or the necessity of traceability.
 - [x] Reopen and inspect the historical receipt unchanged.
 - [x] Verify permission decisions still cannot create auto-approve state.
 
+### 3.5. Post-Review Correctness and Claim Hardening
+
+- [x] Keep unsuccessful Codex tool facts sticky through `turn.completed`; Host,
+      product read model, and Theater must not report or celebrate task success.
+- [x] Add a versioned capture manifest that machine-checks retained fixture,
+      repository, and replay projection digests while marking unavailable
+      original-capture controls and causal eligibility explicitly.
+- [x] Scope Claude/Codex live tests to connectivity because assistant text is
+      intentionally ignored; update the historical evidence record to state
+      that the requested token was not asserted.
+
 ### 4. Measure Trellis Baseline and Fault Recovery
 
+- [x] Add a bounded `episode seed` / `episode resume` Host entry that
+      reuses Chronicle, StateWriter, checkpoint, projection, and orchestrator
+      production paths.
+- [x] Prove C0 creates no Tsukumo storage/spawn and C1/C2 condition visibility
+      does not change rendered migration bytes.
+- [x] Pre-register E02/E03 as wait-for-C1/C2 with honest source-action and
+      owner-review gates; do not mark them seeded from Markdown alone.
+- [ ] After a real reviewed source action, run `episode seed` and fill the
+      machine-derived timestamp/window before target resume.
 - [ ] Record a 12-episode minimum and up to 20 handoff episodes where feasible,
       including at least four mid-task switches, two delayed resumptions, and
       two stale/scope/conflict cases; report shortfall honestly if the window
@@ -104,6 +124,7 @@ git diff --check
 cargo fmt --all -- --check
 cargo test -p tsukumo-adapters codex
 cargo test -p tsukumo-host comparison
+cargo test -p tsukumo-host --test cli_parse_contract --test episode_runner_contract
 cargo check --workspace --all-targets
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace

@@ -12,6 +12,18 @@ pub(crate) fn validate_shape(checkpoint: &HandoffCheckpoint) -> Result<(), Hando
     validate_label("checkpoint.id", checkpoint.id.as_str())?;
     validate_label("checkpoint.quest_id", checkpoint.quest_id.as_str())?;
     validate_text("checkpoint.goal", checkpoint.goal.as_str())?;
+    if checkpoint
+        .registration_digest
+        .as_deref()
+        .is_some_and(|digest| {
+            digest.len() != 64
+                || !digest
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+        })
+    {
+        return Err(HandoffError::InvalidField("checkpoint.registration_digest"));
+    }
     if checkpoint.source_event_refs.is_empty() {
         return Err(HandoffError::InvalidField("checkpoint.source_event_refs"));
     }

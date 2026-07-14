@@ -73,7 +73,7 @@ The first Codex decoder should be stateful and deliberately narrow:
 | documented reasoning / plan items | `KnownIgnored` with observable counters |
 | documented file-change / MCP / web-search items without a captured versioned fixture | registered `KnownIgnored`; do not invent field layouts or tool success |
 | unknown top-level or item type | `UnknownSkipped` with observable counters |
-| `turn.completed` | terminal execution `Outcome(Succeeded)` after pending-tool validation; individual failed/declined commands remain explicit `ToolEnd` errors |
+| `turn.completed` | closes the stream after pending-tool validation; emits `Outcome(Succeeded)` only when no tool error was observed, otherwise fail-closed `Outcome(Failed)` with the failed/declined `ToolEnd` facts preserved |
 | `turn.failed` | generic `Error` plus terminal `Outcome(Failed)`; do not fabricate detail fields until a versioned failure fixture is captured |
 | top-level `error` | typed adapter error or normalized `Error`, based on whether the line is a malformed contract or a valid runtime failure |
 

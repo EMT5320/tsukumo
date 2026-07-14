@@ -10,7 +10,7 @@ use crate::report::{CleanupStatus, ExecutionFailure, ExecutionReport, FailureDet
 use crate::terminal::{reconcile_exit, status_summary, Termination, VendorOutcome};
 use std::time::Instant;
 use tsukumo_adapters::{DecodeDisposition, RuntimeEventDecoder, RuntimeSafetyCapability};
-use tsukumo_kernel::{KernelEventPayload, OutcomeStatus, PersistedText, RuntimePhase};
+use tsukumo_kernel::{KernelEventPayload, OutcomeStatus, PersistedText, RuntimePhase, Timestamp};
 use tsukumo_soul::AppendOutcome;
 
 pub(crate) struct RunningExecution<'run, 'host> {
@@ -26,6 +26,7 @@ pub(crate) struct RunningExecution<'run, 'host> {
     stderr_lines: usize,
     known_ignored_lines: usize,
     unknown_skipped_lines: usize,
+    started_at: Timestamp,
     started: Instant,
 }
 
@@ -35,6 +36,7 @@ impl<'run, 'host> RunningExecution<'run, 'host> {
         builder: EventBuilder,
         handle: Box<dyn RuntimeHandle>,
         resources: RunningResources,
+        started_at: Timestamp,
     ) -> Self {
         Self {
             host,
@@ -49,6 +51,7 @@ impl<'run, 'host> RunningExecution<'run, 'host> {
             stderr_lines: 0,
             known_ignored_lines: 0,
             unknown_skipped_lines: 0,
+            started_at,
             started: Instant::now(),
         }
     }
@@ -212,6 +215,7 @@ impl<'run, 'host> RunningExecution<'run, 'host> {
             projection_id: None,
         })?;
         Ok(ExecutionReport {
+            started_at: self.started_at,
             status: termination.status,
             process_tree: self.process_tree,
             failure: termination.failure,

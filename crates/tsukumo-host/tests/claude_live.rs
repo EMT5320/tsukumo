@@ -13,7 +13,7 @@ use tsukumo_kernel::OutcomeStatus;
 use tsukumo_soul::PreparedProjection;
 use tsukumo_theater::{DirectorContext, StageWorld};
 
-const LIVE_GOAL: &str = "Reply with exactly TSUKUMO_HOST_LIVE_OK and do not use tools.";
+const LIVE_GOAL: &str = "Complete one tool-free Host connectivity turn.";
 const REVIEWED_LIVE_PROJECTION: &str = concat!(
     "# Tsukumo handoff v1\n",
     "Precedence: current user instructions and repository rules override this handoff.\n\n",
@@ -25,11 +25,11 @@ const REVIEWED_LIVE_PROJECTION: &str = concat!(
     "## Open loops\n- (none)\n\n",
     "## Next actions\n- (none)\n\n",
     "## Delegation goal\n",
-    "Reply with exactly TSUKUMO_HOST_LIVE_OK and do not use tools.\n",
+    "Complete one tool-free Host connectivity turn.\n",
 );
 
 #[test]
-fn live_smoke_projection_payload_is_allowlisted() {
+fn connectivity_smoke_projection_payload_is_allowlisted() {
     // Given: the synthetic receipt-first projection reserved for external smoke testing.
     let (_directory, _store, prepared) = prepared_fixture_with_goal(LIVE_GOAL);
 
@@ -42,7 +42,7 @@ fn live_smoke_projection_payload_is_allowlisted() {
 
 #[test]
 #[ignore = "requires TSUKUMO_RUN_LIVE_SMOKE=1, local Claude auth, and model budget"]
-fn claude_owned_process_live_smoke_is_explicit_and_fail_closed() {
+fn claude_owned_process_connectivity_smoke_is_explicit_and_fail_closed() {
     // Given: an explicit operator gate and a locally authenticated Claude executable.
     assert_eq!(
         std::env::var("TSUKUMO_RUN_LIVE_SMOKE").as_deref(),
@@ -105,7 +105,8 @@ fn claude_owned_process_live_smoke_is_explicit_and_fail_closed() {
         ))
         .expect("execute Claude live smoke");
 
-    // Then: a real owned process reaches one durable successful outcome.
+    // Then: a real owned process reaches one durable successful runtime outcome.
+    // Assistant text is intentionally outside this connectivity smoke contract.
     assert_eq!(report.status, OutcomeStatus::Succeeded);
     assert!(world
         .log

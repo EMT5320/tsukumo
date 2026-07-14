@@ -77,11 +77,17 @@ pub struct ComparisonManifest {
 }
 ```
 
-The two runs share repository fixture, goal, runtime/model configuration,
-sandbox, checkpoint, renderer version, and all non-target state. The only input
-change is target StateId inclusion plus the digests derived from rendered
-bytes. The manifest records selected refs, production receipt IDs/digests,
-normalized tool arguments/outcomes, and invariant results.
+The deterministic replay runs share repository fixture, goal, runtime
+profile, sandbox, checkpoint, renderer version, and all non-target state. The
+only replay-input change is target StateId inclusion plus digests derived from
+rendered bytes. The manifest records selected refs, production receipt
+IDs/digests, normalized tool arguments/outcomes, and invariant results.
+
+A separate versioned capture manifest binds each reviewed JSONL fixture to its
+fixture SHA-256, repository fixture SHA-256, and replay projection SHA-256.
+Original capture controls that were not retained remain explicit `null`;
+missing model/config/user-config/capture-prompt digests make causal claims
+ineligible rather than being inferred from the replay setup.
 
 Raw prompts, credentials, home paths, and uncontrolled repository contents are
 rejected. Test outputs use temporary directories; a reviewed redacted fixture
@@ -136,3 +142,24 @@ not beat C0, stop expanding the heavy runtime/TUI path. If C1 succeeds but C2
 does not, retain a slim automatic handoff and remove full traceability from the
 product claim. If only C2 recovery succeeds, pivot to an on-demand evidence
 sidecar.
+
+
+## Bounded Episode Runner
+
+The production evidence entry is intentionally limited to `episode seed` and
+`episode resume`. A reviewed V1 JSON spec freezes condition, workload, fault,
+runtime identities, checkpoint content, projection scope/goal, delay window,
+and quality gate. The spec is an input artifact; SQLite remains the only
+durable product authority.
+
+Seed records an already completed and human-reviewed source action. It does not
+scrape the current external conversation. C1/C2 may pass one exact deterministic
+state statement through the existing extractor/writer and then save an
+immutable checkpoint. C0 returns a manual-baseline marker without creating
+Tsukumo storage.
+
+Resume derives its window from the committed checkpoint time, prepares a
+production receipt, and executes the existing Host runtime port. C1 and C2 use
+the same condition-neutral migration fingerprint and rendered bytes; only the
+post-run metadata exposure differs. Manual utility metrics remain in the
+pre-registered Markdown record rather than becoming a new evaluation database.

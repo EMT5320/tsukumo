@@ -2,7 +2,7 @@
 
 use crate::process::{ProcessError, ProcessExit, ProcessTreeCapability};
 use tsukumo_adapters::AdapterError;
-use tsukumo_kernel::OutcomeStatus;
+use tsukumo_kernel::{OutcomeStatus, Timestamp};
 
 /// How child resources reached their terminal state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -37,6 +37,7 @@ pub enum FailureDetail {
 /// One terminal report for exactly one prepared projection execution.
 #[derive(Debug)]
 pub struct ExecutionReport {
+    pub started_at: Timestamp,
     pub status: OutcomeStatus,
     pub process_tree: ProcessTreeCapability,
     pub failure: Option<ExecutionFailure>,

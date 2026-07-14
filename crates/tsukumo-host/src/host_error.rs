@@ -26,6 +26,10 @@ pub enum HostError {
     MissingPermissionRequest,
     #[error("execution {execution_id} already has its deterministic start event")]
     AlreadyExecuted { execution_id: ExecutionId },
+    #[error("execution start is earlier than the allowed window {not_before_unix_ms}")]
+    ExecutionStartTooEarly { not_before_unix_ms: i64 },
+    #[error("execution start is later than the allowed window {not_after_unix_ms}")]
+    ExecutionStartWindowClosed { not_after_unix_ms: i64 },
     #[error(transparent)]
     Profile(#[from] RuntimeProfileError),
     #[error(transparent)]

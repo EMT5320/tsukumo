@@ -28,8 +28,10 @@ or stop decision rather than an unbounded infrastructure project.
   product store.
 - Trellis is the V0 strong baseline: repository specs, task artifacts, context
   injection, channel runtime, Git, and ordinary owner-directed model switching.
-- The current removed-state comparison proves at most behavioral sensitivity;
-  it does not prove task utility or the necessity of durable traceability.
+- The current removed-state pair proves a manifest-bound replay difference.
+  Exact original capture model/config/prompt digests are unavailable, so it
+  does not establish that the target state alone caused the difference, task
+  utility, or the necessity of durable traceability.
 - Loomstead's closed human-rating gate is a negative prior: evidence/integrity
   differences without behavioral or user-outcome differences cannot support a
   product claim.
@@ -94,6 +96,10 @@ or stop decision rather than an unbounded infrastructure project.
       personal paths.
 - [x] Opt-in live smoke records both CLI versions and fails clearly when an
       explicitly enabled prerequisite is missing.
+
+- [x] A bounded episode seed/resume entry preserves C0 as zero-write/no-spawn,
+      keeps the C1/C2 migration data plane identical, commits receipts before
+      owned-process launch, and emits no prompt/path content in machine summaries.
 
 ## Out of Scope
 

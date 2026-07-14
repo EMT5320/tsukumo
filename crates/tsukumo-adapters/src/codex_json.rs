@@ -18,6 +18,7 @@ pub struct CodexJsonDecoder {
     turn_open: bool,
     terminal_seen: bool,
     pending_commands: HashSet<String>,
+    tool_error_seen: bool,
 }
 
 impl CodexJsonDecoder {
@@ -99,13 +100,14 @@ impl CodexJsonDecoder {
                 ))
             }
             ItemPhase::Completed => {
-                if !self.pending_commands.remove(&identity.id) {
+                if !self.pending_commands.contains(&identity.id) {
                     return Err(DecodeError::invalid(phase.event_type(), "item.id sequence"));
                 }
-                Ok((
-                    DecodeDisposition::Emitted,
-                    vec![map_command_end(identity.value, &thread_id, &identity.id)?],
-                ))
+                let payload = map_command_end(identity.value, &thread_id, &identity.id)?;
+                self.pending_commands.remove(&identity.id);
+                self.tool_error_seen |=
+                    matches!(&payload, KernelEventPayload::ToolEnd { is_error: true, .. });
+                Ok((DecodeDisposition::Emitted, vec![payload]))
             }
             ItemPhase::Updated => {
                 if !self.pending_commands.contains(&identity.id) {
@@ -128,7 +130,8 @@ impl CodexJsonDecoder {
         }
         self.turn_open = false;
         self.terminal_seen = true;
-        let status = if failed {
+        let completed_with_tool_errors = !failed && self.tool_error_seen;
+        let status = if failed || completed_with_tool_errors {
             OutcomeStatus::Failed
         } else {
             OutcomeStatus::Succeeded
@@ -142,7 +145,15 @@ impl CodexJsonDecoder {
         }
         payloads.push(KernelEventPayload::Outcome {
             status,
-            summary: failed.then(|| PersistedText::from_reviewed("Codex turn failed")),
+            summary: if failed {
+                Some(PersistedText::from_reviewed("Codex turn failed"))
+            } else if completed_with_tool_errors {
+                Some(PersistedText::from_reviewed(
+                    "Codex turn completed with tool errors",
+                ))
+            } else {
+                None
+            },
             projection_id: None,
         });
         Ok((DecodeDisposition::Emitted, payloads))

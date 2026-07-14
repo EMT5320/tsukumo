@@ -179,6 +179,11 @@ pub trait RuntimeEventDecoder {
 /// Adapter-owned runtime command and normalization profile.
 pub trait RuntimeProfile {
     fn binding(&self) -> RuntimeBinding;
+    fn version_command(
+        &self,
+        launch: &RuntimeLaunchConfig,
+    ) -> Result<RuntimeCommandSpec, RuntimeProfileError>;
+    fn parse_version_lines(&self, lines: &[String]) -> Result<String, RuntimeProfileError>;
     fn command(
         &self,
         launch: &RuntimeLaunchConfig,
@@ -198,6 +203,8 @@ pub enum RuntimeProfileError {
     InvalidEnvironmentKey,
     #[error("permission callback tool name is invalid")]
     InvalidPermissionTool,
+    #[error("runtime version output does not match the selected profile")]
+    InvalidVersionOutput,
 }
 
 pub(crate) fn validate_launch(launch: &RuntimeLaunchConfig) -> Result<(), RuntimeProfileError> {

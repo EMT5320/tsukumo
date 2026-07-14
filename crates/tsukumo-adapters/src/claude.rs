@@ -7,7 +7,10 @@ use crate::runtime::{
 use crate::stream_json::ClaudeStreamDecoder;
 use std::ffi::OsString;
 use std::fmt;
-use tsukumo_kernel::{contains_sensitive_material, RuntimeBinding, RuntimeKind, RuntimeMode};
+use tsukumo_kernel::{
+    contains_sensitive_material, is_terminal_unsafe_character, RuntimeBinding, RuntimeKind,
+    RuntimeMode,
+};
 
 /// Returns the reviewed C1 fixture consumed by the production decoder.
 pub const fn claude_c1_success_fixture() -> &'static str {
@@ -103,6 +106,17 @@ impl RuntimeProfile for ClaudeRuntimeProfile {
         RuntimeBinding::new(RuntimeKind::ClaudeCli, RuntimeMode::OwnedProcess)
     }
 
+    fn version_command(
+        &self,
+        launch: &RuntimeLaunchConfig,
+    ) -> Result<RuntimeCommandSpec, RuntimeProfileError> {
+        ClaudeRuntimeProfile::version_command(self, launch)
+    }
+
+    fn parse_version_lines(&self, lines: &[String]) -> Result<String, RuntimeProfileError> {
+        parse_claude_version(lines)
+    }
+
     fn command(
         &self,
         launch: &RuntimeLaunchConfig,
@@ -163,5 +177,23 @@ impl RuntimeProfile for ClaudeRuntimeProfile {
                 RuntimeSafetyCapability::PermissionPromptTool
             }
         }
+    }
+}
+
+fn parse_claude_version(lines: &[String]) -> Result<String, RuntimeProfileError> {
+    if lines
+        .iter()
+        .any(|line| line.chars().any(is_terminal_unsafe_character))
+    {
+        return Err(RuntimeProfileError::InvalidVersionOutput);
+    }
+    let versions = lines
+        .iter()
+        .filter_map(|line| line.trim().strip_suffix(" (Claude Code)"))
+        .filter(|version| !version.is_empty() && version.chars().count() <= 256)
+        .collect::<Vec<_>>();
+    match versions.as_slice() {
+        [version] => Ok((*version).to_owned()),
+        _ => Err(RuntimeProfileError::InvalidVersionOutput),
     }
 }

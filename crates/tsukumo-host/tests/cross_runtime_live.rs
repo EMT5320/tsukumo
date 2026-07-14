@@ -18,7 +18,7 @@ use tsukumo_kernel::OutcomeStatus;
 use tsukumo_soul::{PreparedProjection, SoulStore};
 use tsukumo_theater::{DirectorContext, StageWorld};
 
-const LIVE_GOAL: &str = "Reply with exactly TSUKUMO_CROSS_RUNTIME_LIVE_OK and do not use tools.";
+const LIVE_GOAL: &str = "Complete one tool-free dual-runtime connectivity turn.";
 const REVIEWED_LIVE_PROJECTION: &str = concat!(
     "# Tsukumo handoff v1\n",
     "Precedence: current user instructions and repository rules override this handoff.\n\n",
@@ -30,11 +30,11 @@ const REVIEWED_LIVE_PROJECTION: &str = concat!(
     "## Open loops\n- (none)\n\n",
     "## Next actions\n- (none)\n\n",
     "## Delegation goal\n",
-    "Reply with exactly TSUKUMO_CROSS_RUNTIME_LIVE_OK and do not use tools.\n",
+    "Complete one tool-free dual-runtime connectivity turn.\n",
 );
 
 #[test]
-fn dual_runtime_live_payloads_are_allowlisted_and_share_one_checkpoint() {
+fn dual_runtime_connectivity_payloads_are_allowlisted_and_share_one_checkpoint() {
     // Given: two receipt-committed projections from one Spirit and checkpoint.
     let (_directory, _store, claude, codex) = prepared_dual_runtime_live_fixture(LIVE_GOAL);
 
@@ -50,7 +50,7 @@ fn dual_runtime_live_payloads_are_allowlisted_and_share_one_checkpoint() {
 
 #[test]
 #[ignore = "requires TSUKUMO_RUN_LIVE_SMOKE=1, both local CLI auth states, and model budget"]
-fn dual_runtime_owned_process_live_smoke_is_explicit_and_fail_closed() {
+fn dual_runtime_owned_process_connectivity_smoke_is_explicit_and_fail_closed() {
     // Given: one explicit gate and both locally authenticated executables.
     assert_eq!(
         std::env::var("TSUKUMO_RUN_LIVE_SMOKE").as_deref(),
@@ -104,7 +104,8 @@ fn dual_runtime_owned_process_live_smoke_is_explicit_and_fail_closed() {
         (claude_report, codex_report)
     };
 
-    // Then: both owned processes close with durable successful outcomes.
+    // Then: both owned processes close with durable successful runtime outcomes.
+    // Assistant text is intentionally outside this connectivity smoke contract.
     assert_eq!(claude_report.status, OutcomeStatus::Succeeded);
     assert_eq!(codex_report.status, OutcomeStatus::Succeeded);
     assert!(

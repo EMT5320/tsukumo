@@ -9,8 +9,8 @@
 | ID | 条件 | Workload block | 方向 | 类型 / fault | 状态 |
 |---|---|---|---|---|---|
 | E01 | C0 | delayed-resumption | Codex → Claude | natural，48–72h | seeded |
-| E02 | C1 | delayed-resumption | Claude → Codex | natural，48–72h | wait-for-C1 |
-| E03 | C2 | delayed-resumption | Codex → Claude | natural，48–72h | wait-for-C2 |
+| E02 | C1 | delayed-resumption | Claude → Codex | natural，48–72h | [wait-for-C1（已预注册）](episodes/e02-c1-delayed-toolchain-claim-audit.md) |
+| E03 | C2 | delayed-resumption | Codex → Claude | natural，48–72h | [wait-for-C2（已预注册）](episodes/e03-c2-delayed-evidence-freeze-audit.md) |
 | E04 | C0 | mid-task-code | Claude → Codex | natural | planned |
 | E05 | C1 | mid-task-code | Codex → Claude | natural | wait-for-C1 |
 | E06 | C2 | mid-task-code | Claude → Codex | natural | wait-for-C2 |
