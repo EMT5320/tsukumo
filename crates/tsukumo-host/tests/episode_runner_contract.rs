@@ -28,6 +28,10 @@ impl FixedProbe {
         Self::with_version("0.135.0")
     }
 
+    fn claude() -> Self {
+        Self::with_version("2.1.205")
+    }
+
     fn with_version(version: &'static str) -> Self {
         Self {
             calls: std::sync::atomic::AtomicUsize::new(0),
@@ -69,6 +73,202 @@ fn c0_seed_stays_outside_tsukumo_storage_and_processes() {
     assert!(summary.manual_baseline_required);
     assert_eq!(summary.checkpoint_id, None);
     assert!(!data_dir.exists());
+}
+
+#[test]
+fn c0_resume_is_rejected_without_probe_receipt_or_spawn() {
+    // Given: a C0 baseline that never owns Tsukumo storage.
+    let directory = tempdir().expect("create C0 resume parent");
+    let data_dir = directory.path().join("must-remain-absent");
+    let spec = episode_spec(EpisodeCondition::C0);
+    let probe = FixedProbe::codex();
+    let runner = FakeRunner::new(codex_success_outputs());
+
+    // When: resume is attempted through the Host episode boundary.
+    let error = resume_episode_with_services(
+        &spec,
+        &data_dir,
+        Path::new("codex"),
+        directory.path(),
+        false,
+        true,
+        &probe,
+        &runner,
+        &FixedClock::new(200),
+    )
+    .expect_err("C0 must remain a manual baseline");
+
+    // Then: the baseline refuses launch before probe, receipt, or process spawn.
+    assert!(matches!(error, EpisodeError::ManualBaseline));
+    assert_eq!(probe.calls(), 0);
+    assert_eq!(runner.spawn_count(), 0);
+    assert!(!data_dir.exists());
+}
+
+#[test]
+fn resume_without_live_run_confirmation_does_not_prepare_or_spawn() {
+    // Given: a seeded C2 episode that is otherwise ready to resume.
+    let directory = tempdir().expect("create live-confirm store");
+    let spec = episode_spec(EpisodeCondition::C2);
+    seed_episode_with_clock(&spec, directory.path(), &FixedClock::new(100)).expect("seed C2");
+    let probe = FixedProbe::codex();
+    let runner = FakeRunner::new(codex_success_outputs());
+
+    // When: resume omits the explicit live-run confirmation.
+    let error = resume_episode_with_services(
+        &spec,
+        directory.path(),
+        Path::new("codex"),
+        directory.path(),
+        false,
+        false,
+        &probe,
+        &runner,
+        &FixedClock::new(200),
+    )
+    .expect_err("live confirmation is required");
+
+    // Then: no probe, projection receipt, or target process is created.
+    assert!(matches!(error, EpisodeError::LiveRunConfirmationRequired));
+    assert_eq!(probe.calls(), 0);
+    assert_eq!(runner.spawn_count(), 0);
+    let store = SoulStore::open(directory.path()).expect("reopen seeded store");
+    assert!(store
+        .latest_projection_event(None)
+        .expect("read projection events")
+        .is_none());
+}
+
+#[test]
+fn workspace_write_target_without_acknowledgement_does_not_prepare_or_spawn() {
+    // Given: a reviewed Codex workspace-write target already seeded.
+    let directory = tempdir().expect("create workspace-write store");
+    let mut spec = episode_spec(EpisodeCondition::C2);
+    spec.target_runtime.execution_profile = EpisodeExecutionProfile::CodexWorkspaceWrite;
+    seed_episode_with_clock(&spec, directory.path(), &FixedClock::new(100))
+        .expect("seed workspace-write episode");
+    let probe = FixedProbe::codex();
+    let runner = FakeRunner::new(codex_success_outputs());
+
+    // When: resume omits the matching --workspace-write acknowledgement.
+    let error = resume_episode_with_services(
+        &spec,
+        directory.path(),
+        Path::new("codex"),
+        directory.path(),
+        false,
+        true,
+        &probe,
+        &runner,
+        &FixedClock::new(200),
+    )
+    .expect_err("workspace-write acknowledgement is required");
+
+    // Then: the profile gate fails closed before probe, receipt, or spawn.
+    assert!(matches!(
+        error,
+        EpisodeError::WorkspaceWriteAcknowledgementRequired
+    ));
+    assert_eq!(probe.calls(), 0);
+    assert_eq!(runner.spawn_count(), 0);
+    let store = SoulStore::open(directory.path()).expect("reopen seeded store");
+    assert!(store
+        .latest_projection_event(None)
+        .expect("read projection events")
+        .is_none());
+}
+
+#[test]
+fn workspace_write_acknowledgement_mismatch_does_not_prepare_or_spawn() {
+    // Given: a reviewed Codex read-only target already seeded.
+    let directory = tempdir().expect("create workspace-write mismatch store");
+    let spec = episode_spec(EpisodeCondition::C2);
+    seed_episode_with_clock(&spec, directory.path(), &FixedClock::new(100)).expect("seed C2");
+    let probe = FixedProbe::codex();
+    let runner = FakeRunner::new(codex_success_outputs());
+
+    // When: resume supplies --workspace-write against the read-only profile.
+    let error = resume_episode_with_services(
+        &spec,
+        directory.path(),
+        Path::new("codex"),
+        directory.path(),
+        true,
+        true,
+        &probe,
+        &runner,
+        &FixedClock::new(200),
+    )
+    .expect_err("workspace-write must match the reviewed profile");
+
+    // Then: the mismatch fails closed before probe, receipt, or spawn.
+    assert!(matches!(
+        error,
+        EpisodeError::WorkspaceWriteAcknowledgementMismatch
+    ));
+    assert_eq!(probe.calls(), 0);
+    assert_eq!(runner.spawn_count(), 0);
+    let store = SoulStore::open(directory.path()).expect("reopen seeded store");
+    assert!(store
+        .latest_projection_event(None)
+        .expect("read projection events")
+        .is_none());
+}
+
+#[test]
+fn claude_target_resume_retains_receipt_and_spawns_reviewed_runtime() {
+    // Given: a reviewed Codex→Claude migration seeded under C2 visibility.
+    let directory = tempdir().expect("create Claude target store");
+    let mut spec = episode_spec(EpisodeCondition::C2);
+    spec.episode_id = "episode-claude-target".into();
+    spec.quest_id = QuestId::new("quest-claude-target");
+    spec.source_session_id = SessionId::new("source-claude-target");
+    spec.target_session_id = SessionId::new("target-claude-target");
+    spec.source_runtime = EpisodeRuntimeV1 {
+        kind: EpisodeRuntimeKind::CodexCli,
+        version: "0.135.0".into(),
+        execution_profile: EpisodeExecutionProfile::CodexReadOnly,
+    };
+    spec.target_runtime = EpisodeRuntimeV1 {
+        kind: EpisodeRuntimeKind::ClaudeCli,
+        version: "2.1.205".into(),
+        execution_profile: EpisodeExecutionProfile::ClaudeDenyUnapproved,
+    };
+    seed_episode_with_clock(&spec, directory.path(), &FixedClock::new(100))
+        .expect("seed Claude target episode");
+    let runner = FakeRunner::new(claude_success_outputs());
+    let probe = FixedProbe::claude();
+
+    // When: resume probes the reviewed Claude identity and executes the fixture stream.
+    let summary = resume_episode_with_services(
+        &spec,
+        directory.path(),
+        Path::new("claude"),
+        directory.path(),
+        false,
+        true,
+        &probe,
+        &runner,
+        &FixedClock::new(200),
+    )
+    .expect("resume Claude target");
+
+    // Then: the Claude family, version, and receipt-first summary are retained.
+    assert_eq!(summary.runtime, EpisodeRuntimeKind::ClaudeCli);
+    assert_eq!(
+        summary.execution_profile,
+        EpisodeExecutionProfile::ClaudeDenyUnapproved
+    );
+    assert_eq!(summary.runtime_version, "2.1.205");
+    assert_eq!(summary.status, OutcomeStatus::Succeeded);
+    assert_eq!(runner.spawn_count(), 1);
+    assert!(summary.projection_id.is_some());
+    let store = SoulStore::open(directory.path()).expect("reopen Claude target store");
+    assert!(store
+        .projection_receipt(summary.projection_id.as_ref().expect("C2 projection ID"))
+        .expect("load Claude projection receipt")
+        .is_some());
+    assert_eq!(probe.calls(), 1);
 }
 
 #[test]
@@ -505,6 +705,18 @@ fn episode_spec(condition: EpisodeCondition) -> EpisodeSpecV1 {
 
 fn codex_success_outputs() -> Vec<RuntimeOutput> {
     let mut outputs = tsukumo_adapters::codex_0_135_0_success_fixture()
+        .lines()
+        .map(|line| RuntimeOutput::StdoutLine(line.to_owned()))
+        .collect::<Vec<_>>();
+    outputs.push(RuntimeOutput::Exited(ProcessExit {
+        code: Some(0),
+        success: true,
+    }));
+    outputs
+}
+
+fn claude_success_outputs() -> Vec<RuntimeOutput> {
+    let mut outputs = tsukumo_adapters::claude_c1_success_fixture()
         .lines()
         .map(|line| RuntimeOutput::StdoutLine(line.to_owned()))
         .collect::<Vec<_>>();
