@@ -1,6 +1,7 @@
 //! Deterministic source-state, projection-pair, and Rust repository fixtures.
 
 use sha2::{Digest, Sha256};
+use std::borrow::Cow;
 use std::fs;
 use tempfile::{tempdir, TempDir};
 use tsukumo_kernel::{
@@ -88,17 +89,35 @@ pub fn prepare_post_revoke_projection(
 pub fn materialize_cross_runtime_repository() -> (TempDir, String) {
     let directory = tempdir().expect("create Rust fixture directory");
     fs::create_dir(directory.path().join("src")).expect("create fixture source directory");
-    for (path, contents) in fixture_files() {
-        fs::write(directory.path().join(path), contents).expect("write reviewed Rust fixture");
+    let files = fixture_files();
+    for &(path, contents) in &files {
+        fs::write(
+            directory.path().join(path),
+            canonical_fixture_text(contents).as_bytes(),
+        )
+        .expect("write reviewed Rust fixture");
     }
+    let digest = canonical_repository_fixture_digest(&files);
+    (directory, digest)
+}
+
+pub fn canonical_repository_fixture_digest(files: &[(&str, &str)]) -> String {
     let mut digest = Sha256::new();
-    for (path, contents) in fixture_files() {
+    for &(path, contents) in files {
         digest.update(path.as_bytes());
         digest.update([0]);
-        digest.update(contents.as_bytes());
+        digest.update(canonical_fixture_text(contents).as_bytes());
         digest.update([0]);
     }
-    (directory, format!("{:x}", digest.finalize()))
+    format!("{:x}", digest.finalize())
+}
+
+fn canonical_fixture_text(contents: &str) -> Cow<'_, str> {
+    if contents.contains("\r\n") {
+        Cow::Owned(contents.replace("\r\n", "\n"))
+    } else {
+        Cow::Borrowed(contents)
+    }
 }
 
 fn claude_source_event() -> KernelEvent {

@@ -3,8 +3,9 @@
 mod common;
 
 use common::{
-    materialize_cross_runtime_repository, prepare_post_revoke_projection,
-    prepared_cross_runtime_comparison, CrossRuntimePrepared, FakeRunner, FixedClock, TestLedger,
+    canonical_repository_fixture_digest, materialize_cross_runtime_repository,
+    prepare_post_revoke_projection, prepared_cross_runtime_comparison, CrossRuntimePrepared,
+    FakeRunner, FixedClock, TestLedger,
 };
 use sha2::{Digest, Sha256};
 use std::path::Path;
@@ -35,6 +36,23 @@ struct CaseEvidence {
     theater_attention: AttentionTier,
     product_phase: ExecutionPhase,
     runtime_health: RuntimeHealth,
+}
+
+#[test]
+fn repository_fixture_digest_is_stable_across_windows_line_endings() {
+    let lf = [
+        ("Cargo.toml", "[package]\nname = \"fixture\"\n"),
+        ("src/lib.rs", "pub fn answer() -> u32 {\n    42\n}\n"),
+    ];
+    let crlf = [
+        ("Cargo.toml", "[package]\r\nname = \"fixture\"\r\n"),
+        ("src/lib.rs", "pub fn answer() -> u32 {\r\n    42\r\n}\r\n"),
+    ];
+
+    assert_eq!(
+        canonical_repository_fixture_digest(&lf),
+        canonical_repository_fixture_digest(&crlf)
+    );
 }
 
 #[test]
