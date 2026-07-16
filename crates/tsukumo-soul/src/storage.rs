@@ -6,6 +6,7 @@ use crate::projection_error::ProjectionError;
 use crate::state_model::StateValidationError;
 use rusqlite::{Connection, OpenFlags};
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
@@ -67,8 +68,23 @@ pub struct SoulStore {
 impl SoulStore {
     /// Opens or creates the authoritative SQLite store.
     pub fn open(data_dir: impl AsRef<Path>) -> Result<Self, SoulError> {
-        let data_dir = data_dir.as_ref().to_path_buf();
-        fs::create_dir_all(&data_dir)?;
+        let requested_data_dir = data_dir.as_ref().to_path_buf();
+        fs::create_dir_all(&requested_data_dir)?;
+        if fs::symlink_metadata(&requested_data_dir)?
+            .file_type()
+            .is_symlink()
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "data directory cannot be a symbolic link",
+            )
+            .into());
+        }
+        // macOS exposes its normal temporary root through `/var`, which is an
+        // alias of `/private/var`. Resolve ancestor aliases before combining
+        // the path with SQLITE_OPEN_NOFOLLOW so ordinary local stores remain
+        // usable while the final database file still cannot be a symlink.
+        let data_dir = fs::canonicalize(requested_data_dir)?;
         fs::create_dir_all(data_dir.join("skills"))?;
 
         // Keep the main file no-follow and use one fixed persistent rollback sidecar.
@@ -147,4 +163,49 @@ fn ensure_legacy_snapshot_files(data_dir: &Path) -> Result<(), SoulError> {
         }
     }
     Ok(())
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::symlink;
+    use tempfile::tempdir;
+
+    #[test]
+    fn symlinked_ancestor_is_resolved_before_sqlite_nofollow_open() {
+        let root = tempdir().expect("create storage test root");
+        let real_parent = root.path().join("real");
+        fs::create_dir(&real_parent).expect("create real parent");
+        let alias_parent = root.path().join("alias");
+        symlink(&real_parent, &alias_parent).expect("create parent alias");
+
+        let store =
+            SoulStore::open(alias_parent.join("data")).expect("open through aliased ancestor");
+
+        assert_eq!(
+            store.data_dir(),
+            fs::canonicalize(real_parent.join("data"))
+                .expect("canonicalize expected data directory")
+        );
+        assert!(store.database_path().is_file());
+    }
+
+    #[test]
+    fn symlinked_data_root_is_rejected() {
+        let root = tempdir().expect("create storage test root");
+        let real_data = root.path().join("real-data");
+        fs::create_dir(&real_data).expect("create real data directory");
+        let alias_data = root.path().join("alias-data");
+        symlink(&real_data, &alias_data).expect("create data-root alias");
+
+        let error = SoulStore::open(&alias_data)
+            .err()
+            .expect("symlinked data root must fail");
+
+        assert!(matches!(
+            error,
+            SoulError::Io(ref source) if source.kind() == io::ErrorKind::InvalidInput
+        ));
+        assert!(!real_data.join("soul.db").exists());
+    }
 }

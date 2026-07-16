@@ -5,15 +5,18 @@ use std::io::{self, Write};
 use std::process::ExitCode;
 use thiserror::Error;
 use tsukumo_host::{
-    load_presentation_pack, parse_host_args, read_episode_spec, resume_episode, run_tui,
-    seed_episode, EpisodeCommand, EpisodeError, HostCliError, HostCommand, HostProductController,
-    PresentationPackLoadError, ProductController, ProductControllerError, TuiError,
+    inspect_episode, load_presentation_pack, parse_host_args, read_episode_spec, resume_episode,
+    run_tui, seed_episode, EpisodeCommand, EpisodeError, EpisodeInspectError, HostCliError,
+    HostCommand, HostProductController, PresentationPackLoadError, ProductController,
+    ProductControllerError, TuiError,
 };
 
 const HELP: &str = "tsukumo-host - receipt-first runtime composition root / workshop
 
 USAGE:
     tsukumo-host [--presentation-pack <directory>] [--reduced-motion]
+    tsukumo-host episode inspect --spec <reviewed.json>
+        --runtime-executable <path> --working-dir <directory>
     tsukumo-host episode seed --spec <reviewed.json> --data-dir <directory>
     tsukumo-host episode resume --spec <reviewed.json> --data-dir <directory>
         --runtime-executable <path> --working-dir <directory> --confirm-live-run
@@ -22,9 +25,10 @@ USAGE:
     tsukumo-host --version
 
 EPISODES:
+    inspect Inspect reviewed state against current Git, artifacts, and runtime
     seed    Commit one reviewed source summary and immutable checkpoint
     resume  Commit a projection receipt, then launch the reviewed target runtime
-    C0      Remains a manual Trellis-only baseline and never launches here
+    C0      Remains a repository-native manual baseline and never launches here
     C1      Migrates state while evidence controls stay hidden
     C2      Migrates the same state and exposes receipt/provenance metadata
 
@@ -90,6 +94,11 @@ fn run(args: impl IntoIterator<Item = OsString>) -> Result<(), CliError> {
             let summary = seed_episode(&spec, options.data_dir)?;
             write_json(&summary)
         }
+        HostCommand::Episode(EpisodeCommand::Inspect(options)) => {
+            let spec = read_episode_spec(options.spec)?;
+            let summary = inspect_episode(&spec, options.runtime_executable, options.working_dir)?;
+            write_json(&summary)
+        }
         HostCommand::Episode(EpisodeCommand::Resume(options)) => {
             let spec = read_episode_spec(options.spec)?;
             let summary = resume_episode(
@@ -125,6 +134,8 @@ enum CliError {
     Terminal(#[from] TuiError),
     #[error(transparent)]
     Episode(#[from] EpisodeError),
+    #[error(transparent)]
+    EpisodeInspect(#[from] EpisodeInspectError),
     #[error("failed to serialize command output: {0}")]
     Json(#[from] serde_json::Error),
     #[error("failed to write output: {0}")]

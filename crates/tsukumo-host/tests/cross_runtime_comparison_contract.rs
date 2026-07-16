@@ -3,10 +3,10 @@
 mod common;
 
 use common::{
+    canonical_repository_fixture_digest, canonical_text_sha256,
     materialize_cross_runtime_repository, prepare_post_revoke_projection,
     prepared_cross_runtime_comparison, CrossRuntimePrepared, FakeRunner, FixedClock, TestLedger,
 };
-use sha2::{Digest, Sha256};
 use std::path::Path;
 use tsukumo_adapters::{
     codex_0_135_0_gnu_capture_manifest, codex_0_135_0_gnu_with_state_fixture,
@@ -35,6 +35,31 @@ struct CaseEvidence {
     theater_attention: AttentionTier,
     product_phase: ExecutionPhase,
     runtime_health: RuntimeHealth,
+}
+
+#[test]
+fn repository_fixture_digest_is_stable_across_windows_line_endings() {
+    let lf = [
+        ("Cargo.toml", "[package]\nname = \"fixture\"\n"),
+        ("src/lib.rs", "pub fn answer() -> u32 {\n    42\n}\n"),
+    ];
+    let crlf = [
+        ("Cargo.toml", "[package]\r\nname = \"fixture\"\r\n"),
+        ("src/lib.rs", "pub fn answer() -> u32 {\r\n    42\r\n}\r\n"),
+    ];
+
+    assert_eq!(
+        canonical_repository_fixture_digest(&lf),
+        canonical_repository_fixture_digest(&crlf)
+    );
+}
+
+#[test]
+fn capture_fixture_digest_is_stable_across_windows_line_endings() {
+    let lf = "{\"type\":\"thread.started\"}\n{\"type\":\"turn.completed\"}\n";
+    let crlf = "{\"type\":\"thread.started\"}\r\n{\"type\":\"turn.completed\"}\r\n";
+
+    assert_eq!(canonical_text_sha256(lf), canonical_text_sha256(crlf));
 }
 
 #[test]
@@ -518,7 +543,7 @@ fn assert_manifest_run(
     let base = format!("/runs/{condition}");
     assert_eq!(
         required_manifest_str(manifest, &format!("{base}/fixture_sha256")),
-        sha256(fixture)
+        canonical_text_sha256(fixture)
     );
     assert_eq!(
         required_manifest_str(manifest, &format!("{base}/replay_projection_sha256")),
@@ -542,10 +567,6 @@ fn required_manifest_str<'a>(manifest: &'a serde_json::Value, pointer: &str) -> 
         .pointer(pointer)
         .and_then(serde_json::Value::as_str)
         .unwrap_or_else(|| panic!("capture manifest requires string at {pointer}"))
-}
-
-fn sha256(value: &str) -> String {
-    format!("{:x}", Sha256::digest(value.as_bytes()))
 }
 
 fn terminal_outcome(events: &[KernelEvent]) -> OutcomeStatus {

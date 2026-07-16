@@ -30,9 +30,18 @@ pub struct EpisodeResumeOptions {
     pub live_run_confirmed: bool,
 }
 
+/// Inputs required to inspect one reviewed episode against current local state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EpisodeInspectOptions {
+    pub spec: PathBuf,
+    pub runtime_executable: PathBuf,
+    pub working_dir: PathBuf,
+}
+
 /// One bounded evidence-collection action.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EpisodeCommand {
+    Inspect(EpisodeInspectOptions),
     Seed(EpisodeSeedOptions),
     Resume(EpisodeResumeOptions),
 }
@@ -57,9 +66,9 @@ pub enum HostCliError {
     ConflictingCommand { command: &'static str },
     #[error("unknown argument {argument}; use --help")]
     UnknownArgument { argument: String },
-    #[error("missing episode action; expected seed or resume")]
+    #[error("missing episode action; expected inspect, seed, or resume")]
     MissingEpisodeAction,
-    #[error("unknown episode action {action}; expected seed or resume")]
+    #[error("unknown episode action {action}; expected inspect, seed, or resume")]
     UnknownEpisodeAction { action: String },
 }
 
@@ -136,12 +145,41 @@ fn parse_episode_args(values: &[OsString]) -> Result<EpisodeCommand, HostCliErro
         return Err(HostCliError::MissingEpisodeAction);
     };
     match action.to_string_lossy().as_ref() {
+        "inspect" => parse_episode_inspect(&values[1..]).map(EpisodeCommand::Inspect),
         "seed" => parse_episode_seed(&values[1..]).map(EpisodeCommand::Seed),
         "resume" => parse_episode_resume(&values[1..]).map(EpisodeCommand::Resume),
         action => Err(HostCliError::UnknownEpisodeAction {
             action: action.to_owned(),
         }),
     }
+}
+
+fn parse_episode_inspect(values: &[OsString]) -> Result<EpisodeInspectOptions, HostCliError> {
+    let mut spec = None;
+    let mut runtime_executable = None;
+    let mut working_dir = None;
+    let mut index = 0;
+    while index < values.len() {
+        if values[index] == OsStr::new("--spec") {
+            set_path_flag(values, &mut index, &mut spec, "--spec")?;
+        } else if values[index] == OsStr::new("--runtime-executable") {
+            set_path_flag(
+                values,
+                &mut index,
+                &mut runtime_executable,
+                "--runtime-executable",
+            )?;
+        } else if values[index] == OsStr::new("--working-dir") {
+            set_path_flag(values, &mut index, &mut working_dir, "--working-dir")?;
+        } else {
+            return Err(unknown_argument(&values[index]));
+        }
+    }
+    Ok(EpisodeInspectOptions {
+        spec: required_path(spec, "--spec")?,
+        runtime_executable: required_path(runtime_executable, "--runtime-executable")?,
+        working_dir: required_path(working_dir, "--working-dir")?,
+    })
 }
 
 fn parse_episode_seed(values: &[OsString]) -> Result<EpisodeSeedOptions, HostCliError> {

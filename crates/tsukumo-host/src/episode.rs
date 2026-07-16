@@ -309,6 +309,8 @@ pub struct EpisodeSpecV1 {
     pub episode_type: String,
     pub workload_block: String,
     pub fault: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reviewed_git_head: Option<String>,
     pub quest_id: QuestId,
     pub source_session_id: SessionId,
     pub target_session_id: SessionId,
@@ -397,7 +399,7 @@ pub enum EpisodeError {
     UnsupportedSchema(u16),
     #[error("invalid episode spec field {0}")]
     InvalidSpec(&'static str),
-    #[error("C0 is a manual Trellis-only baseline and does not launch through Tsukumo")]
+    #[error("C0 is a repository-native manual baseline and does not launch through Tsukumo")]
     ManualBaseline,
     #[error("episode data path rejected: {0}")]
     LocalPath(String),
@@ -835,7 +837,7 @@ impl EventExecutionExt for KernelEvent {
     }
 }
 
-fn validate_spec(spec: &EpisodeSpecV1) -> Result<(), EpisodeError> {
+pub(crate) fn validate_spec(spec: &EpisodeSpecV1) -> Result<(), EpisodeError> {
     if spec.schema_version != EPISODE_SPEC_SCHEMA_VERSION {
         return Err(EpisodeError::UnsupportedSchema(spec.schema_version));
     }
@@ -858,6 +860,15 @@ fn validate_spec(spec: &EpisodeSpecV1) -> Result<(), EpisodeError> {
         ),
     ] {
         validate_label(field, value)?;
+    }
+    if let Some(reviewed_git_head) = &spec.reviewed_git_head {
+        if !matches!(reviewed_git_head.len(), 40 | 64)
+            || !reviewed_git_head
+                .chars()
+                .all(|character| character.is_ascii_hexdigit())
+        {
+            return Err(EpisodeError::InvalidSpec("reviewed_git_head"));
+        }
     }
     if spec.source_runtime.kind == spec.target_runtime.kind {
         return Err(EpisodeError::InvalidSpec("source_runtime.kind"));

@@ -9,6 +9,7 @@ mod process;
 mod projection;
 
 pub use cross_runtime::{
+    canonical_repository_fixture_digest, canonical_text_sha256,
     materialize_cross_runtime_repository, prepare_post_revoke_projection,
     prepared_cross_runtime_comparison, CrossRuntimePrepared,
 };

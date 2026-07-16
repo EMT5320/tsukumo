@@ -14,10 +14,25 @@ pub(super) fn checked_absolute(path: &Path) -> Result<PathBuf, LocalPathError> {
             .map_err(|source| io_error(path, source))?
             .join(path)
     };
+    #[cfg(target_os = "macos")]
+    let absolute = normalize_macos_system_alias(absolute);
     validate_lexical(&absolute)?;
     #[cfg(windows)]
     super::windows::validate_windows_drive(&absolute)?;
     Ok(absolute)
+}
+
+#[cfg(target_os = "macos")]
+fn normalize_macos_system_alias(path: PathBuf) -> PathBuf {
+    for (alias, canonical) in [
+        (Path::new("/var"), Path::new("/private/var")),
+        (Path::new("/tmp"), Path::new("/private/tmp")),
+    ] {
+        if let Ok(relative) = path.strip_prefix(alias) {
+            return canonical.join(relative);
+        }
+    }
+    path
 }
 
 pub(super) fn validate_lexical(path: &Path) -> Result<(), LocalPathError> {
@@ -160,5 +175,22 @@ pub(super) fn io_error(path: &Path, source: std::io::Error) -> LocalPathError {
     LocalPathError::Io {
         path: safe_path_label(path),
         source,
+    }
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fixed_macos_system_aliases_are_normalized_before_symlink_validation() {
+        assert_eq!(
+            checked_absolute(Path::new("/var/folders/tsukumo")).expect("normalize /var"),
+            PathBuf::from("/private/var/folders/tsukumo")
+        );
+        assert_eq!(
+            checked_absolute(Path::new("/tmp/tsukumo")).expect("normalize /tmp"),
+            PathBuf::from("/private/tmp/tsukumo")
+        );
     }
 }

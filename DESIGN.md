@@ -1,8 +1,8 @@
 # Tsukumo — 设计稿（合并终版）
 
-> 状态：北极星保留，产品形态解冻；2026-07-13 二次复核结论为**验证性 GO 至 2026-07-23**。当前没有已证明的市场护城河，P0 收束为“可信交接相对 Trellis 强基线是否降低续接与恢复成本”（见 §2.7、§16）。本文是 tsukumo 项目的唯一事实来源。
-> 日期：2026-07-13
-> 合并来源：`archive/DESIGN-A.md`（付丧神叙事主线）+ `archive/DESIGN-B.md`（事件驱动内核路线）+ 2026-07-07 讨论共识 + **2026-07-08 愿景收束讨论** + **2026-07-11 V0 前端收束讨论（舞台优先/九十九工房/栞/PresentationPack）** + **2026-07-13 go/no-go 复核** + **2026-07-13 Trellis 强基线 / Loomstead 效用门复核**
+> 状态：北极星保留，2026-07-16 拍板进入**作品集优先的有趣工具收束期**。项目不再以市场护城河或商业竞争作为 2026-07-23 生死门；P0 改为“做出完整、可靠、有辨识度、能清楚展示工程能力的 Tsukumo”。可信交接与状态对账保留为技术主轴，九十九工房与付丧神体验重新升为作品集主角。本文是 tsukumo 项目的唯一事实来源。
+> 日期：2026-07-16
+> 合并来源：`archive/DESIGN-A.md`（付丧神叙事主线）+ `archive/DESIGN-B.md`（事件驱动内核路线）+ 2026-07-07 讨论共识 + **2026-07-08 愿景收束讨论** + **2026-07-11 V0 前端收束讨论（舞台优先/九十九工房/栞/PresentationPack）** + **2026-07-13 go/no-go 复核** + **2026-07-13 强基线 / Loomstead 效用门复核** + **2026-07-16 求职作品集方向决策**
 > 命名：Tsukumo（付丧神）— 日本神话中"器物经年吸收精华化为精灵"的概念，是工具拟人化的文化根基。
 
 ---
@@ -19,7 +19,7 @@
 
 > **Tsukumo 是 runtime 无关的可信交接与关系状态层：能力属于外部 agent 市场，用户拥有可迁移、可解释、可撤销的执行状态；公会大厅是默认的观测、控制与作品集展示面，不再是唯一入口。**
 
-次级命题（保留自初版）：**把一个 agent 工具变得有意思。** 不一定要有多强的性能，但要足够有趣。
+当前作品集命题（2026-07-16 升为 P0）：**把一个 agent 工具变得有意思，同时证明浮夸表象之下有完整、严谨、可复现的工程。** 市场已有相似能力不会自动取消一个好点子；常见能力可以证明覆盖广度，Tsukumo 的角色、舞台与状态叙事负责把它做得有辨识度。
 
 ### 1.2 市场格局（2026-07-08 调研更新）
 
@@ -50,15 +50,23 @@
 
 **护城河修正（二次复核）**：当前没有已证明的护城河。“拥有会话 × 事件溯源 × 跨 runtime 连续性”只是能力组合；Trellis 周末实践证明轻量层已经覆盖大量协调价值。剩余研究 / 产品假设是：**证据化执行状态迁移与选择性撤销能否在强基线上显著降低继续正确工作和故障恢复的成本**。通过前不再使用“独占”“结构性够不着”或“数量级优势”的口径。
 
-### 1.3 "有意思"的三个时间层次（权重翻转）
+**2026-07-16 作品集决策（覆盖此前市场生死门）**：
 
-| 层次 | 机制 | 验证方式 | 定位 |
+1. 竞品继续用于校准能力边界、交互质量和叙事诚实度，不再决定“别人做了，所以 Tsukumo 不做”；
+2. 不追逐功能数量和商业差异化清单；已有能力只有在服务演示闭环、工程叙事或真实使用体验时才扩展；
+3. 7 月 23 日前的成功标准是作品集可运行、可讲清、可复现、有记忆点。市场效用实验若来得及可作为加分证据，不能阻塞发布；
+4. CC Switch v3.17 已把供应商、MCP、Skills 与 Prompt/“记忆文件”的项目快照切换商品化，说明这类能力值得掌握。Tsukumo 不复制它的配置管理产品，重点展示任务状态、时间漂移、证据回执与付丧神体验。
+
+### 1.3 "有意思"的四个时间层次（作品集权重回正）
+
+| 层次 | 机制 | 验证方式 | 当前定位 |
 |---|---|---|---|
-| **第一眼：看它干活像看戏**（spectacle） | 像素舞台演出、台词、结算画面 | 自己愿意开着剧场模式干活 | **入场券**（已被市场商品化） |
-| **第一个月：看它长大**（progression） | 技能沉淀、熟练度、羁绊、引用共同历史 | 能感到它比第一天更懂自己 | **核心命题** |
-| **长期：它成了熟悉的那一个**（attachment） | 积累的记忆/技能/理解提高替换成本 | 会舍不得删掉它的数据目录 | **长期假设** |
+| **第一眼：看它干活像看戏**（spectacle） | 像素舞台、角色状态、台词与结算 | 90 秒演示能让人理解并记住 Tsukumo | **P0 作品集钩子** |
+| **再次打开：它知道做到哪了**（re-entry） | checkpoint 与当前仓库 / runtime 观察做状态对账 | 一天后能快速识别已完成、漂移、阻塞与下一步 | **P0 技术展示切片** |
+| **第一个月：看它长大**（progression） | 技能沉淀、熟练度、羁绊、引用共同历史 | 能感到它比第一天更懂自己 | **P1 / post-V0** |
+| **长期：它成了熟悉的那一个**（attachment） | 积累的记忆/技能/理解提高替换成本 | 会舍不得删掉它的数据目录 | **长期创作命题** |
 
-第一层体验已经由 V0 TUI 建成；7 月 23 日前冻结第二、三层扩张，先验证可信交接。依恋仍是长期产品假设：记忆与共同历史可能提高替换成本，但可以被导出、复制或被相邻平台吸收，需后续外部用户验证。
+第一层体验已经由 V0 TUI 建成。7 月 23 日前集中补齐第二层的最小只读对账、可复现构建、演示脚本和作品集说明；成长与依恋不再承担本轮进度压力，但继续作为项目最初创意的长期方向。
 
 ### 1.4 切入痛点
 
@@ -67,7 +75,7 @@
 1. **注意力打散**：不同工具、不同模型擅长不同场景，来回切换时注意力碎裂、操作繁琐；
 2. **记忆不通用**：各工具的历史上下文/记忆/偏好互不相通，每换一个工具就"失忆"一次；
 3. **阻塞无感知**：后台 agent 卡在等审批/等输入，人类几分钟甚至几小时后才发现；
-4. **中断后重入无感知**（2026-07-13 新增，真实案例）：因病离开几天后重新开工，部分状态/决策其实早已过时，但人的记忆已模糊，直到推进一段时间才发现走错，后续方向也过了许久才重新想起。这个案例证明 stale-state recovery 值得测试；它尚未证明结构化 trace 比 Trellis 制品更有效，也不能替代发生率与恢复成本数据。
+4. **中断后重入无感知**（2026-07-13 新增，2026-07-16 再次命中）：因病离开几天后曾发生过状态过时却继续推进；换新电脑后仅隔一天，主人已开始模糊项目进度，旧 episode 材料仍声称两个文件未提交，而 Git 已证明它们进入提交，Codex 版本与本机工具链也发生漂移。这个自然案例把“记住旧状态”进一步收窄为“恢复前先判断旧状态今天是否仍成立”。
 
 ### 1.5 反 Clippy 原则
 
@@ -94,14 +102,14 @@
 | 纯增强层（hook/规则文件/Trellis 式） | 已证明能高效解决大部分协调与上下文连续问题；若缺少稳定的跨 runtime 执行、回执和撤销权威，则难以单独承担可信交接。它是强基线与潜在上游，不再被视为低一等形态 |
 | 自有前后端 + agent 纯黑盒 runtime | 只读接入够不着灵魂机制（记忆注入/审批演出/羁绊），退化回观察者皮肤 |
 
-**采用可收缩的第四形态**：Trellis / repository artifacts 作为声明与协作层，tsukumo 作为证据化执行 / 状态 / revoke sidecar，公会大厅作为可选的观测、控制与作品集展示面，外部 agent 作为**可驱动**的插拔 runtime。ACP client 身份可提供发出委托、接收结构化事件与处理权限请求的能力；是否值得长期接管入口由 §2.7 的效用数据决定。
+**采用可收缩的第四形态**：repository-native artifacts 作为声明与协作层，tsukumo 作为证据化执行 / 状态 / revoke sidecar，公会大厅作为默认作品集展示与可选控制面，外部 agent 作为**可驱动**的插拔 runtime。ACP client 身份可提供发出委托、接收结构化事件与处理权限请求的能力；长期是否接管入口不阻塞 V0。
 
-**"A 为骨"的终态含义改写**：自研内核不再肩负"有竞争力的编码 agent"，它是状态与关系的宿主——主搭档日常对话、闲时生态、记忆检索、轻量任务可在验证后逐步接入，重活外包给 runtime。这样退出能力军备竞赛；状态 / 关系层仍需面对记忆服务、agent client 和平台内置能力的竞争。
+**"A 为骨"的终态含义改写**：自研内核不肩负"有竞争力的编码 agent"，它是状态与关系的宿主——主搭档日常对话、闲时生态、记忆检索、轻量任务可逐步接入，重活外包给 runtime。作品集阶段不参加能力军备竞赛，但会诚实展示 adapter、事件协议、状态持久化、安全门与跨 runtime 编排能力。
 
 ### 2.2 架构总览
 
 ```
-Trellis / AGENTS.md / task artifacts / existing tool entry points
+README / DESIGN / AGENTS.md / Git / existing tool entry points
                          ↓
 ┌─ tsukumo evidence sidecar ─────────────────────────┐
 │ canonical state / checkpoint / receipt / revoke    │
@@ -137,7 +145,7 @@ Process Fidelity 留下的商业纪律是：状态从真实流量派生仍只满
 
 ### 2.6 已知代价（诚实清单）
 
-1. **指挥所赛道在变挤**（Vibe Kanban、Conductor、Agent Cockpit 等）——灵魂层尚未证明差异化，当前只以可信交接效用作验证；
+1. **指挥所赛道在变挤**（Vibe Kanban、Conductor、Agent Cockpit 等）——这降低商业差异化，不取消其作为技术作品与创作载体的价值；
 2. **adapter 维护税**——ACP 收敛了大半，但各家 headless 格式仍会漂移，接受"永远有一个 adapter 是坏的"的常态；
 3. **入口迁移成本**——不再默认要求 tsukumo 成为“启动 agent 的那个终端”；优先验证 evidence sidecar 能否接入现有工作流，TUI 入口只在数据支持时强化。
 
@@ -165,11 +173,11 @@ Process Fidelity 留下的商业纪律是：状态从真实流量派生仍只满
 | C1 相对 C0 的续接收益 | 自动迁移有 n=1 产品效用 | trace/revoke 本身必要 |
 | C2 相对 C1 的恢复收益 | 来源与撤销降低故障成本 | 自然故障频率足以覆盖常驻开销 |
 
-V0 使用三组条件：C0 = Trellis-only 强基线；C1 = 自动迁移、隐藏追溯控制；C2 = 自动迁移 + 完整来源 / revoke。`C1 - C0` 隔离迁移价值，`C2 - C1` 隔离追溯与撤销价值。完整协议、指标和阈值见 `.trellis/tasks/07-10-c1-cross-runtime-evidence/research/trellis-baseline-and-utility-evaluation.md`。
+若继续效用实验，使用三组条件：C0 = README / DESIGN / AGENTS / Git 等 repository-native 强基线；C1 = 自动迁移、隐藏追溯控制；C2 = 自动迁移 + 完整来源 / revoke。`C1 - C0` 隔离迁移价值，`C2 - C1` 隔离追溯与撤销价值。旧 Trellis 实验材料只作为历史记录保留，不再进入 Codex 工作流；重启实验前须在有效文档中重写协议。
 
 产品门（非统计显著性声明）：C1 相对 C0 的首次正确动作约快 30%，或主人干预约少 50%，且质量不降；C2 相对 C1 的坏状态定位 / 恢复约快 50%，或 collateral revoke 与复发明显下降；正常开销控制在约 5–10% 小预算内。注入故障只证明恢复能力，自然 dogfood 才能估计发生率。
 
-开发优先级据此调整：**P0 = 可信交接 + Trellis 强基线 + 效用度量；P1 = Claude / Codex 真实双 runtime demo；P2 = 权限审批闭环、陪伴养成与入口强化。** TUI 保留为可选控制与展示面。若迁移门和恢复门均失败，停止扩大重型 runtime / TUI；若只有其中一门通过，收缩为轻量 handoff 或按需 evidence sidecar。
+2026-07-16 后的开发优先级：**P0 = 可复现构建 + 九十九工房展示闭环 + Claude/Codex 真实能力证明 + 最小 re-entry 状态对账；P1 = 发布打包、演示录制与作品集叙事；P2 = C0/C1/C2 效用度量、权限桥深化、陪伴养成与入口扩张。** 市场效用门不再决定是否完成作品集；它仍约束对外 claim，不能把链路完整升级成用户价值。
 
 完整追溯只覆盖高价值状态：`追溯必要性 ∝ 生命周期 × 影响范围 × 自动化程度 × 推断不确定性`。短期、低影响、用户显式且容易重输的信息不进入完整因果链。
 
@@ -680,7 +688,8 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 | 适配 | **A1** ★新增 | 第一个 runtime adapter（倾向 Claude Code，ACP 或 headless stream-json）→ KernelEvent → 驱动舞台 | **"外部事件流能否演好戏"——终态最大技术假设，M1 后尽早验证** |
 | 成长 | M2 | MEMORY.md/USER.md 冻结快照 + SKILL.md 渐进披露 + skill_create | 成长闭环 |
 | 世界 | M3 | 好感度/熟练度 reducer、随机事件、Curator | 养成可视化 |
-| 打磨 | M4 | 回放模式、cargo 发布、README | — |
+| 再入 | **R1** ★2026-07-16 | checkpoint 与当前 Git / artifact / runtime 观察做只读对账 | **隔天回来能否在 30 秒内知道做到哪、什么已漂移** |
+| 打磨 | M4 | 可复现构建、cargo 发布、README、90 秒演示 | 作品集能否独立运行并讲清 |
 
 两线在事件协议处握手——KernelEvent/StageEvent 的 schema 是唯一的共享契约，先定协议再分头开工。A1 只验证事件翻译与演出，不做完整注入协议（§8 全量落地在 post-MVP）。
 
@@ -696,9 +705,19 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 - [x] Windows ConPTY 正常退出与 80x24 → 100x30 resize 回执通过
 - [ ] tmux 与 legacy conhost 实机回执待具备对应环境后补录
 
+### 2026-07-16 作品集收束状态
+
+- [x] 五 crate 分层、KernelEvent、Chronicle、Canonical State、Handoff/Projection 与 receipt-first 主链；
+- [x] Claude / Codex fixture adapter、受控 removed-state 对照与 opt-in live seam；
+- [x] 九十九工房 TUI、栞五态、Inspector、Permission modal 与 PresentationPack；
+- [x] 根 README、episode runner 防护与 17 项 targeted contract；
+- [x] R1 最小状态对账：`episode inspect` 只读核对 reviewed Git HEAD、artifact、进度 / open loop 与 runtime，输出 `still_current / completed / drifted / blocked / unknown`，不做通用语义 agent；
+- [x] 2026-07-16 opt-in live smoke：Claude Code `2.1.211` 单 runtime 与 Claude / Codex CLI `0.144.5` 双 runtime 均通过；本机 Codex provider 流需显式继承 `HTTPS_PROXY` / `ALL_PROXY`；
+- [ ] M4 发布门：锁文件、固定工具链、CI、LICENSE、演示脚本与可分发产物。
+
 ---
 
-## 16. V0 范围与边界 ★2026-07-11 收束
+## 16. V0 范围与边界 ★2026-07-11 收束 / 2026-07-16 作品集重排
 
 完整功能门见 `docs/tsukumo-v0-scope-convergence-2026-07-11.md`。
 
@@ -706,7 +725,8 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 
 - 版本化 checkpoint、StateRef、source EventId 与跨 runtime handoff；
 - Claude / Codex 归一化语义与受控对照证据；
-- Trellis-only / 自动迁移 / 完整追溯三条件 dogfood 与 stale-state recovery 证据；
+- repository-native baseline、自动迁移与完整追溯的最小可演示接缝；
+- checkpoint 相对当前 Git / artifact / runtime 的只读 re-entry 对账；
 - 舞台优先的可交互像素 TUI；
 - 栞一套可见角色、深夜九十九工房一个世界；
 - workshop / state inspector / projection inspector / permission modal；
@@ -724,14 +744,17 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 - Pathfinding、碰撞、战斗和鼠标优先交互；
 - Process Fidelity 评测与反事实回放研究产品化。
 
-这里排除的是通用研究平台；为可信交接作出的最小 C0/C1/C2 效用验证属于 V0 产品门。
+这里排除的是通用研究平台。C0/C1/C2 可以作为作品集中的严谨实验接缝；完整样本积累与市场效用结论已移出 7 月 23 日硬门。
 
-### V0 验收纪律 ★2026-07-13
+### V0 验收纪律 ★2026-07-16
 
-- **时间盒**：2026-07-22 冻结代码、证据和 demo；**2026-07-23** 随 AlgoCoach workshop 结果与简历投递启动，作 GO / PIVOT / NO-GO 决策。7/13–14 冻结协议并种下 48–72 小时延迟任务，7/14–17 打通真实双 runtime，7/17–21 高强度 dogfood；
-- **强基线优先**：C0 必须是当前可用的 Trellis 工作流，不能用裸 agent 制造虚假优势；样本单位为 handoff episode，日均 1–2 亿 token 只用于加速积累，不替代独立交接样本；
-- **可信交接优先**：P0 验证自动迁移与 stale-state recovery；权限审批闭环降为 P2，不再作为本轮 demo 的硬门；
-- **Codex 侦察先行**：cross-runtime-evidence 开工先做纯侦察 spike，抓取 Codex CLI 真实事件流对照 KernelEvent 清单，确认语义鸿沟（工具事件粒度、权限机制、中途注入能力）后再写 decoder，避免按 Claude 的形状设计接口；
+- **时间盒**：2026-07-22 冻结代码、证据、演示与作品集文案；**2026-07-23** 论文通知后开始投递。该日期不再举行市场 GO / PIVOT / NO-GO 审判；
+- **7/16**：恢复新电脑 Rust / Claude 环境，固定工具链与锁文件，复跑全量离线测试，冻结本次方向决策；
+- **7/17–19**：完成 R1 最小状态对账和一条 Claude / Codex 可复现演示链；只修阻断演示或破坏 claim 的问题；
+- **7/20–21**：发布打包、README / 架构图 / 演示脚本、录屏与简历条目；不新增横向大功能；
+- **7/22**：只接受发布阻断修复，冻结 commit、验证回执和作品集材料；
+- **作品集完成度优先**：一个稳定、有趣、能讲清的闭环优于更多未收口的实验；市场已有同类能力可以作为工程覆盖证明，不触发功能删除；
+- **强基线仍诚实**：若展示效用对照，C0 使用 README / DESIGN / AGENTS / Git 等当前仓库原生制品，不能用裸 agent 制造优势；
 - **live smoke 周跑**：opt-in live smoke 每周至少手动跑一次，receipt/日志记录 CLI 版本号——fixture 契约测试感知不到厂商 CLI 漂移，周跑为 adapter 维护税决策（ACP 主通道迁移时机）积累实测数据。
 
 ---
@@ -794,20 +817,20 @@ Loomstead 经验直接复用：风格定位（二次元轻幻想）、色板（3
 2026-07-08 更新：从占位升级为明确的接力叙事。
 
 > **Loomstead（研究）**：建了 agent 行为天文台与 trace / counterfactual harness，也通过失败的 human-rating gate 得到关键负面结果：证据完整不等价于行为分化或用户价值。
-> **Tsukumo（产品验证）**：把这条负面结果带入真实 Claude / Codex 工作流，验证用户拥有的执行状态跨独立 runtime 后，能否相对 Trellis 强基线降低续接、纠错与恢复成本。
+> **Tsukumo（工程产品）**：把事件溯源与 claim discipline 带入真实 Claude / Codex 工作流，用 Rust 构建可追溯、可撤销、可演出的 agent 状态层，并把严谨机制翻译成一个有记忆点的九十九工房。
 
-这补上“把研究中的否证转化为产品取舍”的后半句。两个项目共享事件溯源、反事实与 claim discipline；Tsukumo 的新增贡献必须来自独立 runtime 边界与操作成本因变量。
+这补上“把研究中的否证转化为工程产品”的后半句。两个项目共享事件溯源、反事实与 claim discipline；Tsukumo 新增独立 runtime 边界、receipt-first 执行、安全降级、状态对账与角色化产品面。
 
 现有项目矩阵：模型 → AlgoCoach；上下文协议 → ContextGuard；Agent harness → Loomstead；推理配置 → Inference Lab；**产品闭环 → Tsukumo**。
 
 > ⚠️ 叙事纪律：求职作品集是本轮的明确交付，不再假装只是副产品；叙事仍由证据约束。不得为“研究味”扩建通用 eval 平台，也不得把链路完整、故障注入或 deterministic tool-argument 变化升级成用户价值。
 
-**2026-07-13 优先级重申**：7 月 23 日开始投递前，可全力验证本项目。主人日均 1–2 亿 token 提供高强度 dogfood 条件，但样本单位仍是 handoff episode。若必须在陪伴与可信交接之间取舍，保留可信交接。分发冷启动、schema 长期承诺、外部依恋验证、权限演出与成长扩展均不阻塞本轮决策。
+**2026-07-16 优先级拍板**：7 月 23 日开始投递前，项目以求职作品完成度为唯一硬截止。技术深度与有趣体验同时保留：Chronicle / projection / safety 证明工程能力，九十九工房 / 栞 / 演出证明产品与创作能力。竞品重合用于说明“掌握了热门能力”，不再成为主动删掉好体验的理由。
 
-作品集准备两套诚实叙事：
+作品集准备两层诚实叙事：
 
-- **正向**：Loomstead 发现 trace 与价值的断层；Tsukumo 在真实双 runtime 中相对 Trellis 测得续接 / 恢复收益，完成研究到产品的闭环；
-- **否证 / 收缩**：构建数万行 Rust 原型并以自己的 Trellis 工作流消融，发现轻量层覆盖主要价值，因而收缩为 evidence sidecar 或停止重型形态，展示 80/20 判断与止损能力。
+- **30 秒入口**：一个有趣的本地 agent 工房；Claude / Codex 的工作变成可观察、可检查、可恢复的付丧神演出；
+- **深入追问**：五 crate 单向依赖、vendor-neutral 事件协议、SQLite 权威状态、不可变 receipt、fail-closed runtime、安全路径边界、确定性 TUI 与跨平台契约测试。效用实验只报告实际完成的结果。
 
 ---
 
@@ -832,15 +855,24 @@ Loomstead 经验直接复用：风格定位（二次元轻幻想）、色板（3
 
 ### 2026-07-13 已化解
 
-- [x] MVP go/no-go → 验证性 GO 至 2026-07-23；7/22 冻结证据，届时作 GO / PIVOT / NO-GO
-- [x] 强基线 → Trellis-only，不再与裸 agent 比较（§2.7）
+- [x] MVP go/no-go → 当时验证性 GO 至 2026-07-23；其市场生死门已被 7/16 作品集决策覆盖
+- [x] 强基线 → 当时采用 Trellis-only；现行基线已随工作流退出改为 repository-native（§2.7）
 - [x] 核心取舍 → 可信交接优先；权限审批闭环、陪伴与养成扩展降为 P2
 - [x] 项目优先级 → 求职技术展示优先，产品化/市场竞争非紧迫（§18）
 
+### 2026-07-16 已化解
+
+- [x] 项目走向 → 不参加 7/23 市场护城河生死赛，完成一个有趣、可靠、可复现的求职作品；
+- [x] 竞品态度 → 相似能力是参照和能力证明，不自动触发放弃；不追求 CC Switch 式配置管理功能对齐；
+- [x] 活跃工作流 → Codex 不再读取或调用 Trellis，C0 改为 repository-native 强基线；
+- [x] “有意思”与技术深度取舍 → 九十九工房负责记忆点，可信状态链负责经得起追问，两者同为作品集交付。
+
 ### 仍开放
 
-- [ ] web/panel 第二消费端形态（KernelEvent 消费者，架构零重写；对照 Pixel Agents 的 VS Code 分发红利）
-- [ ] 可信交接相对 Trellis 是否产生续接收益、完整追溯相对隐藏追溯是否产生恢复收益（2026-07-23 决策门）
+- [x] R1 状态对账的最小 observation / reconciliation schema 与 CLI 呈现；
+- [ ] 90 秒演示脚本、录屏、架构图与简历条目是否形成一个完整叙事；
+- [ ] web/panel 第二消费端形态（post-portfolio；KernelEvent 消费者，架构零重写）
+- [ ] 可信交接相对 repository-native baseline 是否产生续接收益、完整追溯相对隐藏追溯是否产生恢复收益（可选后续实验）
 - [ ] 自然 stale / scope / conflict 发生率能否覆盖 Chronicle / receipt / revoke 的常驻开销
 - [ ] 编辑器类 ACP client（Zed / JetBrains / Cursor）对聚合层位置的长期威胁跟踪
 - [ ] 分发冷启动：预编译二进制 + 热交接录屏渠道（post-V0，非紧迫）
@@ -894,6 +926,12 @@ Loomstead 经验直接复用：风格定位（二次元轻幻想）、色板（3
 - **Buddy / CodePal**（新物种：养成伙伴）：MCP 虚拟宠物 / 桌宠，XP·物种·情绪·跨 client 持久（Buddy 8 周 1 万+ clone）；其 progression 与执行状态连续性较轻，但已经满足部分陪伴需求，是必须正视的替代品
 - **OpenMemory MCP（Mem0）**：本地跨工具记忆基础设施（审计面板、任意 MCP client）——"记忆跨工具"本身不再是差异化卖点
 - **ACP 进展**：注册表 2026-01 上线、2026-03 stabilize，25+ agent（含 Cursor）接入——驱动级接入成本低于预期；同时注意编辑器类 ACP client（Zed/JetBrains）自身即拥有会话，列为长期观察项（§2.7）
+
+### 竞品格局增补（2026-07-16 作品集视角）
+
+- **CC Switch v3.17**：供应商、MCP、Skills 与 Prompt/“记忆文件”可保存为命名项目快照，按 Claude / Claude Desktop / Codex 作用域一键切换并自动回填。它把配置平面商品化，证明这类能力是热门且有用的工程覆盖面；
+- **作品集结论**：Tsukumo 不做 CC Switch 的替代品，也不因能力重合删除自己的 runtime adapter、skill socket 或记忆接缝。配置切换回答“带哪套工具工作”，Tsukumo 的 R1 与 Chronicle 回答“回来后旧状态哪些仍成立”，九十九工房负责把这条技术链做得有趣；
+- **竞争纪律**：不再以竞品数量决定项目存废；引用竞品时仍保持事实准确，不宣称未证明的独占性或用户价值。
 
 ### ACP（Agent Client Protocol）— runtime 互操作标准
 - Zed 发起（2025-08），JetBrains 共同维护，Apache 协议，19+ agent 兼容（Claude Code / Codex / Gemini CLI / opencode / Goose 等）

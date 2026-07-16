@@ -1,5 +1,5 @@
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tsukumo_host::{
     parse_host_args, EpisodeCommand, HostCliError, HostCommand, PresentationPackSource,
 };
@@ -75,8 +75,51 @@ fn episode_seed_when_parsed_requires_reviewed_spec_and_data_dir() {
     assert!(matches!(
         command,
         HostCommand::Episode(EpisodeCommand::Seed(options))
-            if options.spec == PathBuf::from("episode.json")
-                && options.data_dir == PathBuf::from("episode-data")
+            if options.spec == Path::new("episode.json")
+                && options.data_dir == Path::new("episode-data")
+    ));
+}
+
+#[test]
+fn episode_inspect_when_parsed_keeps_observation_inputs_explicit() {
+    let command = parse_host_args([
+        "episode",
+        "inspect",
+        "--spec",
+        "episode.json",
+        "--runtime-executable",
+        "claude",
+        "--working-dir",
+        "workspace",
+    ])
+    .expect("parse episode inspect");
+
+    assert!(matches!(
+        command,
+        HostCommand::Episode(EpisodeCommand::Inspect(options))
+            if options.spec == Path::new("episode.json")
+                && options.runtime_executable == Path::new("claude")
+                && options.working_dir == Path::new("workspace")
+    ));
+}
+
+#[test]
+fn episode_inspect_missing_working_dir_is_actionable() {
+    let error = parse_host_args([
+        "episode",
+        "inspect",
+        "--spec",
+        "episode.json",
+        "--runtime-executable",
+        "claude",
+    ])
+    .expect_err("working directory is required");
+
+    assert!(matches!(
+        error,
+        HostCliError::MissingValue {
+            flag: "--working-dir"
+        }
     ));
 }
 
@@ -101,8 +144,8 @@ fn episode_resume_when_parsed_keeps_runtime_capability_explicit() {
     assert!(matches!(
         command,
         HostCommand::Episode(EpisodeCommand::Resume(options))
-            if options.runtime_executable == PathBuf::from("codex")
-                && options.working_dir == PathBuf::from("workspace")
+            if options.runtime_executable == Path::new("codex")
+                && options.working_dir == Path::new("workspace")
                 && options.workspace_write_acknowledged
                 && options.live_run_confirmed
     ));

@@ -1,8 +1,16 @@
 # Episode 种籽包审阅 — 2026-07-14
 
-**状态：待老师审阅（PENDING_TEACHER_REVIEW）**
-**本目录禁止在审阅通过前执行 `episode seed` / `episode resume`。**
+**状态：已被现实状态漂移取代（SUPERSEDED_STALE_EVIDENCE，2026-07-16）**
+**本目录永久禁止执行 `episode seed` / `episode resume`；仅保留为真实 stale-state 样本。**
 审阅状态只写在本文件；`c1.review.json` / `c2.review.json` 仅含 `EpisodeSpecV1` 认识字段。
+
+## 2026-07-16 取代原因
+
+- `README.md` 与 `episode_runner_contract.rs` 已分别进入 `e4628e2` / `9c7942c`，原材料中的“未提交”状态不再成立；
+- 新电脑观测到 Codex CLI `0.144.5`，原 spec 固定的 source 版本为 `0.135.0`；
+- 新安装 Claude Code 为 `2.1.211`，原 target 固定为 `2.1.205`；
+- 原 episode 从未 seed，也没有 episode data-dir，不能把这份草稿追认成已发生的 checkpoint；
+- 本材料现在用于 R1 re-entry 状态对账设计：保存旧事实、读取当前证据、显式标记 drift，再由主人决定继承、完成、替换或放弃。
 
 ## 材料清单
 
