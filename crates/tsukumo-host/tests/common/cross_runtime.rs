@@ -112,6 +112,13 @@ pub fn canonical_repository_fixture_digest(files: &[(&str, &str)]) -> String {
     format!("{:x}", digest.finalize())
 }
 
+pub fn canonical_text_sha256(value: &str) -> String {
+    format!(
+        "{:x}",
+        Sha256::digest(canonical_fixture_text(value).as_bytes())
+    )
+}
+
 fn canonical_fixture_text(contents: &str) -> Cow<'_, str> {
     if contents.contains("\r\n") {
         Cow::Owned(contents.replace("\r\n", "\n"))
