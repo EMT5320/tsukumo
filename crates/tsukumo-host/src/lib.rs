@@ -16,6 +16,7 @@ mod process;
 mod process_handle;
 mod process_reader;
 mod product;
+mod reentry;
 mod report;
 mod runtime_probe;
 mod safety;
@@ -24,8 +25,8 @@ mod terminal;
 mod tui;
 
 pub use cli::{
-    parse_host_args, EpisodeCommand, EpisodeResumeOptions, EpisodeSeedOptions, HostCliError,
-    HostCommand, HostRunOptions,
+    parse_host_args, EpisodeCommand, EpisodeInspectOptions, EpisodeResumeOptions,
+    EpisodeSeedOptions, HostCliError, HostCommand, HostRunOptions,
 };
 pub use clock::{ClockError, HostClock, SystemClock};
 pub use config::{ExecutionPolicy, ProcessConfigError, ProcessLimits};
@@ -54,6 +55,10 @@ pub use process_handle::StandardRuntimeHandle;
 pub use product::{
     HostProductController, ProductControl, ProductController, ProductControllerError,
     ProductSnapshot,
+};
+pub use reentry::{
+    inspect_episode, inspect_episode_with_probe, ArtifactWorkspaceState, EpisodeInspectError,
+    EpisodeInspectSummaryV1, ReentryFindingStatus, ReentryFindingV1,
 };
 pub use report::{CleanupStatus, ExecutionFailure, ExecutionReport, FailureDetail};
 pub use runtime_probe::{RuntimeIdentity, RuntimeProbe, RuntimeProbeError, StandardRuntimeProbe};

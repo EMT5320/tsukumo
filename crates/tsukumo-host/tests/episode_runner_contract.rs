@@ -60,7 +60,7 @@ impl tsukumo_host::RuntimeProbe for FixedProbe {
 
 #[test]
 fn c0_seed_stays_outside_tsukumo_storage_and_processes() {
-    // Given: the manual Trellis-only baseline points at a path that does not exist.
+    // Given: the repository-native manual baseline points at a path that does not exist.
     let directory = tempdir().expect("create C0 parent");
     let data_dir = directory.path().join("must-remain-absent");
     let spec = episode_spec(EpisodeCondition::C0);
@@ -661,6 +661,7 @@ fn episode_spec(condition: EpisodeCondition) -> EpisodeSpecV1 {
         episode_type: "natural_delayed_resumption".into(),
         workload_block: "toolchain_claim_audit".into(),
         fault: "none".into(),
+        reviewed_git_head: None,
         quest_id: QuestId::new("quest-visibility-pair"),
         source_session_id: SessionId::new("source-visibility-pair"),
         target_session_id: SessionId::new("target-visibility-pair"),

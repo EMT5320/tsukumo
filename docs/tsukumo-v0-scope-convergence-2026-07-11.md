@@ -1,5 +1,10 @@
 # Tsukumo V0 Scope Convergence — 2026-07-11
 
+> 2026-07-16 superseding priority: V0 is now a portfolio-first creative-tool
+> release. Market-moat validation remains optional evidence, not a release
+> gate. The hard gate is a reproducible, technically defensible, memorable
+> Tsukumo demo by July 23. `DESIGN.md` is authoritative.
+
 ## Decision
 
 The owner approved a functional V0 (`v0.1.0`) focused on real cross-runtime
@@ -54,8 +59,29 @@ new durable product authority. Production mode remains receipt-only.
    cross-runtime evidence.
 5. `07-11-v0-mvp-tui` — stage-first interactive product surface, default
    Shiori workshop, and minimal presentation-pack boundary.
-6. `07-11-v0-release-packaging` — installability, README, license, lockfile,
-   toolchain, CI, and release verification.
+6. `07-11-v0-release-packaging` — in progress: installability, README, license,
+   committed lockfile, pinned toolchain, Linux / Windows GNU CI, and release
+   verification.
+7. `07-16-v0-reentry-inspect` — complete: a read-only CLI report compares the
+   reviewed Git HEAD, current artifact state, progress claims, open loops, and
+   prompt-free runtime identity without writing Chronicle state.
+
+## Portfolio Exit Gate — 2026-07-16
+
+The July 23 exit gate requires:
+
+1. one reproducible local build and offline non-live test pass;
+2. one opt-in Claude / Codex demonstration whose claims stay inside retained
+   evidence;
+3. the Midnight Ninety-Nine Workshop as the memorable product surface;
+4. one bounded re-entry report that distinguishes current, completed, drifted,
+   blocked, and unknown state without silently projecting stale claims;
+5. README, architecture explanation, demo script, license, lockfile, pinned
+   toolchain, and CI configuration.
+
+The gate does not require market uniqueness, statistical product-utility
+evidence, a second frontend, long-term memory curation, or feature parity with
+configuration managers such as CC Switch.
 
 ## Scope Guard
 

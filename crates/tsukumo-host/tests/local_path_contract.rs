@@ -1,9 +1,12 @@
-use std::{fs, path::PathBuf};
+use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+#[cfg(windows)]
+use std::path::PathBuf;
 use tempfile::tempdir;
-use tsukumo_host::{
-    load_presentation_pack, HostProductController, PresentationPackLoadError,
-    PresentationPackSource,
-};
+#[cfg(windows)]
+use tsukumo_host::PresentationPackLoadError;
+use tsukumo_host::{load_presentation_pack, HostProductController, PresentationPackSource};
 
 #[cfg(windows)]
 #[test]
@@ -87,6 +90,26 @@ fn ordinary_local_data_directory_still_opens() {
     // Then: the local store is created without touching any remote source.
     drop(controller);
     assert!(path.join("soul.db").is_file());
+}
+
+#[cfg(unix)]
+#[test]
+fn arbitrary_symlinked_data_ancestor_remains_rejected() {
+    let directory = tempdir().expect("temporary symlink parent");
+    let real_parent = directory.path().join("real");
+    fs::create_dir(&real_parent).expect("create real parent");
+    let alias_parent = directory.path().join("alias");
+    symlink(&real_parent, &alias_parent).expect("create arbitrary parent alias");
+    let data_path = alias_parent.join("product-data");
+    let pack =
+        load_presentation_pack(&PresentationPackSource::EmbeddedDefault).expect("embedded pack");
+
+    let error = HostProductController::open(&data_path, &pack)
+        .err()
+        .expect("arbitrary symlink ancestor must fail");
+
+    assert!(error.to_string().contains("local path rejected"));
+    assert!(!real_parent.join("product-data/soul.db").exists());
 }
 
 #[cfg(windows)]
