@@ -689,7 +689,7 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 | 成长 | M2 | MEMORY.md/USER.md 冻结快照 + SKILL.md 渐进披露 + skill_create | 成长闭环 |
 | 世界 | M3 | 好感度/熟练度 reducer、随机事件、Curator | 养成可视化 |
 | 再入 | **R1** ★2026-07-16 | checkpoint 与当前 Git / artifact / runtime 观察做只读对账 | **隔天回来能否在 30 秒内知道做到哪、什么已漂移** |
-| 打磨 | M4 | 可复现构建、cargo 发布、README、90 秒演示 | 作品集能否独立运行并讲清 |
+| 打磨 | M4 | 可复现/可安装构建、Git tag / GitHub Release、README、90 秒演示 | 作品集能否独立运行并讲清 |
 
 两线在事件协议处握手——KernelEvent/StageEvent 的 schema 是唯一的共享契约，先定协议再分头开工。A1 只验证事件翻译与演出，不做完整注入协议（§8 全量落地在 post-MVP）。
 
@@ -714,6 +714,14 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 - [x] R1 最小状态对账：`episode inspect` 只读核对 reviewed Git HEAD、artifact、进度 / open loop 与 runtime，输出 `still_current / completed / drifted / blocked / unknown`，不做通用语义 agent；
 - [x] 2026-07-16 opt-in live smoke：Claude Code `2.1.211` 单 runtime 与 Claude / Codex CLI `0.144.5` 双 runtime 均通过；本机 Codex provider 流需显式继承 `HTTPS_PROXY` / `ALL_PROXY`；
 - [ ] M4 发布门：锁文件、固定工具链、CI、LICENSE、演示脚本与可分发产物。
+
+### 2026-07-17 M4 发布候选证据
+
+- [x] `cargo install --path crates/tsukumo-host --locked` 临时目录安装与 `tsukumo-host 0.1.0` 复现；
+- [x] 实际 deterministic renderer PNG/GIF、90.0 秒 1280×720 H.264 walkthrough 与 5 分钟离线 Demo Path；
+- [x] README 架构图、作品集 Evidence/Claim 索引、v0.1.0 Release Notes；
+- [x] 求职复盘包、Profile 模板、主简历与 onepager 条目完成；简历保持 2 页，onepager 保持 1 页；
+- [ ] `v0.1.0` tag、GitHub Release 与 tag install 最终回执。
 
 ---
 
@@ -870,7 +878,7 @@ Loomstead 经验直接复用：风格定位（二次元轻幻想）、色板（3
 ### 仍开放
 
 - [x] R1 状态对账的最小 observation / reconciliation schema 与 CLI 呈现；
-- [ ] 90 秒演示脚本、录屏、架构图与简历条目是否形成一个完整叙事；
+- [x] 90 秒演示脚本、actual deterministic renderer walkthrough、架构图与简历条目形成完整叙事；
 - [ ] web/panel 第二消费端形态（post-portfolio；KernelEvent 消费者，架构零重写）
 - [ ] 可信交接相对 repository-native baseline 是否产生续接收益、完整追溯相对隐藏追溯是否产生恢复收益（可选后续实验）
 - [ ] 自然 stale / scope / conflict 发生率能否覆盖 Chronicle / receipt / revoke 的常驻开销
