@@ -1,6 +1,6 @@
 # Tsukumo V0 作品集证据索引
 
-> 状态：V0.1 发布候选证据；最后核验日期：2026-07-17。
+> 状态：V0.1 发布证据；最后核验日期：2026-07-17。
 >
 > 本页区分“本轮复现”“持久化 CI”“历史 live smoke 记录”和“尚未证明”，避免把契约测试或演示夹具升级成用户价值结论。
 
@@ -18,7 +18,7 @@
 
 当前公开 CI：<https://github.com/EMT5320/tsukumo/actions>
 
-发布后以 `v0.1.0` tag 对应 revision 和该 revision 的 CI 为最终发布证据。
+最终发布入口：<https://github.com/EMT5320/tsukumo/releases/tag/v0.1.0>。以 `v0.1.0` tag 对应 revision 和该 revision 的 CI 为最终发布证据。
 
 ## 2. 实际作品集媒体
 

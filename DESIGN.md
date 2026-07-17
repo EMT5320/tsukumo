@@ -713,7 +713,7 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 - [x] 根 README、episode runner 防护与 17 项 targeted contract；
 - [x] R1 最小状态对账：`episode inspect` 只读核对 reviewed Git HEAD、artifact、进度 / open loop 与 runtime，输出 `still_current / completed / drifted / blocked / unknown`，不做通用语义 agent；
 - [x] 2026-07-16 opt-in live smoke：Claude Code `2.1.211` 单 runtime 与 Claude / Codex CLI `0.144.5` 双 runtime 均通过；本机 Codex provider 流需显式继承 `HTTPS_PROXY` / `ALL_PROXY`；
-- [ ] M4 发布门：锁文件、固定工具链、CI、LICENSE、演示脚本与可分发产物。
+- [x] M4 发布门：锁文件、固定工具链、CI、LICENSE、演示脚本与可分发产物；以 `v0.1.0` tag / GitHub Release 分发。
 
 ### 2026-07-17 M4 发布候选证据
 
@@ -721,7 +721,7 @@ KernelEvent 是唯一契约：runtime adapter（§2.2）产出同一枚举，`Qu
 - [x] 实际 deterministic renderer PNG/GIF、90.0 秒 1280×720 H.264 walkthrough 与 5 分钟离线 Demo Path；
 - [x] README 架构图、作品集 Evidence/Claim 索引、v0.1.0 Release Notes；
 - [x] 求职复盘包、Profile 模板、主简历与 onepager 条目完成；简历保持 2 页，onepager 保持 1 页；
-- [ ] `v0.1.0` tag、GitHub Release 与 tag install 最终回执。
+- [x] `v0.1.0` tag、GitHub Release 与 tag install 作为最终发布动作；稳定入口固定为 `releases/tag/v0.1.0`。
 
 ---
 
