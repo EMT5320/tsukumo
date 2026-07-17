@@ -16,6 +16,19 @@
 
 当前仓库版本：`0.1.0`（workspace，`edition = 2021`，`rust-version = 1.75`）。
 
+## 10 秒证据台账
+
+| 读者需要确认什么 | 可核验收据 |
+|---|---|
+| 这是实际可运行产品面 | 上方 GIF 来自真实 deterministic renderer；仓内含 90 秒 H.264 walkthrough |
+| 状态如何跨 runtime 迁移 | Chronicle / Canonical State / Handoff + Projection 三本账 |
+| 高风险投影如何约束 | receipt-first、权限决策、撤销与只读 `episode inspect` |
+| 工程边界是否清晰 | 5-crate workspace、Rust 1.75、Linux / Windows CI、v0.1.0 Release |
+
+**招聘官最短路径**：先看上方实际 renderer → 跑
+[`docs/DEMO_PATH.md`](docs/DEMO_PATH.md) → 查
+[`docs/PORTFOLIO_EVIDENCE.md`](docs/PORTFOLIO_EVIDENCE.md) 的 claim/evidence 对照。
+
 ## 项目定位与阶段
 
 - **定位**：跨 runtime 的连续关系状态与交接层；工程上落地为 Chronicle / Canonical State / Handoff+Projection 三本账，以及投影前必须落盘的 `ProjectionReceipt`。
