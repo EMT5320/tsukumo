@@ -1,8 +1,8 @@
 # Tsukumo
 
-本地优先、**receipt-first**、有付丧神演出的关系状态与跨 runtime 交接层：外部 agent 负责能力，用户持有可迁移、可解释、可撤销的执行状态；默认产品面是可观测、可审批的「九十九工房」TUI。
+本地优先、**receipt-first** 的跨 runtime Agent 状态与交接层：外部 agent 提供能力，用户持有可迁移、可解释、可撤销的执行状态；默认产品面是可观测、可审批的「九十九工房」TUI。
 
-> 一句话：能力可以更换；关系、经历与交接证据由用户持有。
+> 能力可以更换；关系、经历与交接证据留在用户手里。
 
 [![CI](https://github.com/EMT5320/tsukumo/actions/workflows/ci.yml/badge.svg)](https://github.com/EMT5320/tsukumo/actions/workflows/ci.yml)
 
