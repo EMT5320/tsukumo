@@ -10,11 +10,11 @@
   <img src="docs/assets/tsukumo-v0-demo.gif" alt="Tsukumo actual deterministic renderer: workshop, inspectors, permission modal, and Shiori poses" width="950">
 </p>
 
-> **Actual deterministic renderer capture**：使用真实 `tsukumo-theater` / `tsukumo-host` 渲染代码与固定 `ProductView`；没有启动 Claude/Codex，也不包含用户数据。概念图与角色参考另存于 `docs/visual-references/`，不作为运行证据。
+> **Deterministic renderer capture**：使用真实 `tsukumo-theater` / `tsukumo-host` 渲染代码与固定 `ProductView`，离线复现 TUI 交互、审批与 receipt；opt-in live runner seam 由 ignored test 路径单独验证。
 
 [5 分钟离线 Demo](docs/DEMO_PATH.md) · [90 秒 H.264 renderer walkthrough](docs/assets/tsukumo-v0-walkthrough.mp4) · [作品集证据索引与 claim 红线](docs/PORTFOLIO_EVIDENCE.md)
 
-当前仓库版本：`0.1.0`（workspace，`edition = 2021`，`rust-version = 1.75`）。
+当前仓库版本：`0.1.0`（workspace，`edition = 2021`，`rust-version = 1.88`）。
 
 ## 10 秒证据台账
 
@@ -23,7 +23,7 @@
 | 这是实际可运行产品面 | 上方 GIF 来自真实 deterministic renderer；仓内含 90 秒 H.264 walkthrough |
 | 状态如何跨 runtime 迁移 | Chronicle / Canonical State / Handoff + Projection 三本账 |
 | 高风险投影如何约束 | receipt-first、权限决策、撤销与只读 `episode inspect` |
-| 工程边界是否清晰 | 5-crate workspace、Rust 1.75、Linux / Windows CI、v0.1.0 Release |
+| 工程边界是否清晰 | 5-crate workspace、Rust 1.88 MSRV、Linux / Windows CI、v0.1.0 Release |
 
 **招聘官最短路径**：先看上方实际 renderer → 跑
 [`docs/DEMO_PATH.md`](docs/DEMO_PATH.md) → 查
@@ -46,7 +46,7 @@
 
 ## 前置要求
 
-- Rust toolchain：**≥ 1.75**（workspace `rust-version`）；仓库通过 `rust-toolchain.toml` 固定作品集验证工具链
+- Rust toolchain：**≥ 1.88**（workspace `rust-version`）；仓库通过 `rust-toolchain.toml` 固定作品集验证工具链
 - 构建：Cargo；本机可 `cargo run` / `cargo test`
 - 可选 live smoke：本机已登录的 Claude / Codex CLI，并显式设置 `TSUKUMO_RUN_LIVE_SMOKE=1`（见下方验证）
 

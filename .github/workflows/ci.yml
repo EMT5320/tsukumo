@@ -44,3 +44,17 @@ jobs:
 
       - name: Run tests
         run: cargo test --workspace --target ${{ matrix.target }}
+
+  msrv:
+    name: MSRV 1.88
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install minimum supported Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.88.0
+
+      - name: Check workspace on MSRV
+        run: cargo check --workspace --all-targets --locked

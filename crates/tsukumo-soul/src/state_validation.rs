@@ -120,7 +120,7 @@ pub(crate) fn validate_lifecycle(
         || event
             .causation_id
             .as_ref()
-            .map_or(true, |cause| !evidence_refs.contains(cause))
+            .is_none_or(|cause| !evidence_refs.contains(cause))
     {
         return Err(StateValidationError::InvalidLifecycleEvent.into());
     }

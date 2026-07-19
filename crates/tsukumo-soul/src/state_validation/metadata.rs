@@ -78,9 +78,7 @@ pub(super) fn validate_scope(draft: &StateDraft) -> Result<(), SoulError> {
         .applicability
         .workspace
         .as_ref()
-        .map_or(true, |workspace| {
-            valid_metadata_text(workspace.as_str(), 128)
-        });
+        .is_none_or(|workspace| valid_metadata_text(workspace.as_str(), 128));
     let valid_tags = [
         &draft.scope.applicability.task_tags,
         &draft.scope.applicability.language_tags,

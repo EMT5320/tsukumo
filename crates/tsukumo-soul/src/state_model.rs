@@ -116,12 +116,10 @@ impl StateRecord {
     /// Returns whether this version is selectable at the provided instant.
     pub fn is_active_at(&self, as_of: Timestamp) -> bool {
         self.created_at <= as_of
-            && self
-                .expires_at
-                .map_or(true, |expires_at| expires_at > as_of)
+            && self.expires_at.is_none_or(|expires_at| expires_at > as_of)
             && self
                 .deactivated_at
-                .map_or(true, |deactivated_at| deactivated_at > as_of)
+                .is_none_or(|deactivated_at| deactivated_at > as_of)
     }
 }
 
