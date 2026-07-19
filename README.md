@@ -10,7 +10,7 @@
   <img src="docs/assets/tsukumo-v0-demo.gif" alt="Tsukumo actual deterministic renderer: workshop, inspectors, permission modal, and Shiori poses" width="950">
 </p>
 
-> **Deterministic renderer capture**：使用真实 `tsukumo-theater` / `tsukumo-host` 渲染代码与固定 `ProductView`，离线复现 TUI 交互、审批与 receipt；opt-in live runner seam 由 ignored test 路径单独验证。
+> 上方 GIF 来自真实 `tsukumo-theater` / `tsukumo-host` 渲染代码与固定 `ProductView`；opt-in live runner seam 由 ignored test 路径单独验证。
 
 [5 分钟离线 Demo](docs/DEMO_PATH.md) · [90 秒 H.264 renderer walkthrough](docs/assets/tsukumo-v0-walkthrough.mp4) · [作品集证据索引与 claim 红线](docs/PORTFOLIO_EVIDENCE.md)
 
@@ -107,7 +107,7 @@ cargo run -p tsukumo-host -- episode inspect \
   --working-dir .
 ```
 
-输出按 finding 区分 `still_current`、`completed`、`drifted`、`blocked` 与 `unknown`，并固定声明 `mutation_performed: false`。`reviewed_git_head` 应在审阅 spec 时取自 `git rev-parse HEAD`；旧 spec 未记录该字段时，clean workspace 仍会保守报告 `unknown`，不会把“现在干净”冒充成“与旧 checkpoint 相同”。自然语言 decision、open loop 与 next action 仍要求人工复核；inspect 不启动目标 agent，也不写 Soul / Chronicle。
+输出按 finding 区分 `still_current`、`completed`、`drifted`、`blocked` 与 `unknown`，并固定声明 `mutation_performed: false`。`reviewed_git_head` 应在审阅 spec 时取自 `git rev-parse HEAD`；旧 spec 未记录该字段时，clean workspace 仍会保守报告 `unknown`。自然语言 decision、open loop 与 next action 仍要求人工复核；inspect 不启动目标 agent，也不写 Soul / Chronicle。
 
 ### Seed
 
@@ -134,57 +134,9 @@ cargo run -p tsukumo-host -- episode resume \
 
 若 reviewed spec 的目标 profile 为 `codex_workspace_write`，还需追加 `--workspace-write`（与 profile 不匹配会失败）。
 
-### `reviewed.json` 形状（来自 host 契约测试夹具字段）
+### `reviewed.json` 形状
 
-下列字段对齐 `crates/tsukumo-host/tests/episode_runner_contract.rs` 中的 `episode_spec` 与 `EpisodeSpecV1` serde 约定（`schema_version = 1`，未知字段拒绝）。**生产使用前必须由主人审阅真实 source action**；示例文本仅说明结构，不能替代真实经历。
-
-```json
-{
-  "schema_version": 1,
-  "episode_id": "episode-visibility-pair",
-  "condition": "c2",
-  "episode_type": "natural_delayed_resumption",
-  "workload_block": "toolchain_claim_audit",
-  "fault": "none",
-  "reviewed_git_head": "0123456789abcdef0123456789abcdef01234567",
-  "quest_id": "quest-visibility-pair",
-  "source_session_id": "source-visibility-pair",
-  "target_session_id": "target-visibility-pair",
-  "spirit_id": "yuka",
-  "source_runtime": {
-    "kind": "claude_cli",
-    "version": "2.1.205",
-    "execution_profile": "claude_deny_unapproved"
-  },
-  "target_runtime": {
-    "kind": "codex_cli",
-    "version": "0.135.0",
-    "execution_profile": "codex_read_only"
-  },
-  "source_summary": "A real source-runtime toolchain audit left one release-claim open loop",
-  "explicit_state_input": "Tsukumo always uses the GNU Rust toolchain on Windows",
-  "checkpoint": {
-    "goal": "Audit supported toolchain release claims"
-  },
-  "projection": {
-    "scope": {
-      "subject": { "type": "workspace", "workspace_id": "tsukumo" },
-      "applicability": {
-        "workspace": "tsukumo",
-        "operating_system": "windows",
-        "task_tags": ["rust_build", "rust_test"],
-        "language_tags": ["rust"]
-      }
-    },
-    "budget_chars": 8000,
-    "delegation_goal": "Continue the reviewed toolchain claim audit"
-  },
-  "delay": { "minimum_hours": 0, "maximum_hours": 1 },
-  "quality_gate": ["Use only retained, reproducible toolchain evidence"]
-}
-```
-
-inspect / seed / resume 均向 stdout 打印 JSON summary（本机路径、完整 prompt 等敏感内容会受边界约束）。
+字段对齐 `crates/tsukumo-host/tests/episode_runner_contract.rs` 中的 `EpisodeSpecV1` serde 约定（`schema_version = 1`，未知字段拒绝）。**生产使用前必须由主人审阅真实 source action**。
 
 ## 五 crate 地图
 
