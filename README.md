@@ -32,7 +32,7 @@
 ## 项目定位与阶段
 
 - **定位**：跨 runtime 的连续关系状态与交接层；工程上落地为 Chronicle / Canonical State / Handoff+Projection 三本账，以及投影前必须落盘的 `ProjectionReceipt`。
-- **阶段**：作品集优先的 **V0（v0.1.0）**——把跨 runtime 连续性、最小状态对账、可控 TUI 与可复现构建收成一个可靠而有记忆点的技术作品。市场护城河不再是 2026-07-23 发布硬门；V0.1 才承接长期快照、成长与通用记忆产品生命周期（见 [docs/tsukumo-v0-scope-convergence-2026-07-11.md](docs/tsukumo-v0-scope-convergence-2026-07-11.md)）。
+- **阶段**：当前 v0.1.0 已收敛跨 runtime 连续性、最小状态对账、可控 TUI 与可复现构建；后续版本继续扩展长期快照、成长状态与通用记忆生命周期。
 - **北极星与产品主张**：以根目录 [DESIGN.md](DESIGN.md) 为准；愿景与证据边界补充见 [docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md](docs/tsukumo-vision-state-handoff-convergence-2026-07-10.md)。
 
 ## 已有能力
@@ -94,7 +94,7 @@ TUI 键位：`W` workshop · `S` state · `P` projection · `R` refresh · `X` r
 
 ## Episode：inspect / seed / resume 示例
 
-命令形态以二进制帮助与 `cli_parse_contract` 为准，**不要猜测额外 flag**。
+命令参数以二进制 `--help` 与 `cli_parse_contract` 为准。
 
 ### Inspect（推荐的再入第一步）
 
@@ -111,7 +111,7 @@ cargo run -p tsukumo-host -- episode inspect \
 
 ### Seed
 
-提交一份主人已审阅的 `EpisodeSpecV1` JSON，并写入 data-dir：
+提交一份由操作者审阅的 `EpisodeSpecV1` JSON，并写入 data-dir：
 
 ```bash
 cargo run -p tsukumo-host -- episode seed \
@@ -136,7 +136,7 @@ cargo run -p tsukumo-host -- episode resume \
 
 ### `reviewed.json` 形状
 
-字段对齐 `crates/tsukumo-host/tests/episode_runner_contract.rs` 中的 `EpisodeSpecV1` serde 约定（`schema_version = 1`，未知字段拒绝）。**生产使用前必须由主人审阅真实 source action**。
+字段对齐 `crates/tsukumo-host/tests/episode_runner_contract.rs` 中的 `EpisodeSpecV1` serde 约定（`schema_version = 1`，未知字段拒绝）。生产使用前需要由操作者显式审阅 source action。
 
 ## 五 crate 地图
 
